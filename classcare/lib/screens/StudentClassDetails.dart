@@ -5,7 +5,8 @@ class Studentclassdetails extends StatelessWidget {
   final String classId;
   final String className;
 
-  Studentclassdetails({required this.classId, required this.className});
+  const Studentclassdetails(
+      {super.key, required this.classId, required this.className});
 
   // Fetch the class details from Firestore
   Future<DocumentSnapshot> getClassDetails() async {
@@ -64,28 +65,45 @@ class Studentclassdetails extends StatelessWidget {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 10),
-                // Display list of assignments (if available)
-                classData['assignments'] != null
-                    ? Expanded(
-                        child: ListView.builder(
-                          itemCount: classData['assignments'].length,
-                          itemBuilder: (context, index) {
-                            var assignment = classData['assignments'][index];
-                            return Card(
-                              elevation: 4,
-                              margin: EdgeInsets.symmetric(vertical: 10),
-                              child: ListTile(
-                                title: Text(assignment['title']),
-                                subtitle: Text('Due Date: ${assignment['dueDate']}'),
-                                onTap: () {
-                                  // Handle assignment details, submission, etc.
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      )
-                    : Center(child: Text("No assignments available")),
+                // Display list of assignments uploaded by the teacher
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('classes')
+                      .doc(classId)
+                      .collection('assignments')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(
+                          child: Text("No assignments available"));
+                    }
+
+                    return Expanded(
+                      child: ListView.builder(
+                        itemCount: snapshot.data!.docs.length,
+                        itemBuilder: (context, index) {
+                          var assignment = snapshot.data!.docs[index];
+                          return Card(
+                            elevation: 4,
+                            margin: EdgeInsets.symmetric(vertical: 10),
+                            child: ListTile(
+                              title: Text(assignment['title']),
+                              subtitle:
+                                  Text('Due Date: ${assignment['dueDate']}'),
+                              onTap: () {
+                                // Handle assignment details, submission, etc.
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           );
