@@ -17,7 +17,7 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this); // Changed length to 2
   }
 
   @override
@@ -40,7 +40,6 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
         var now = DateTime.now();
         List<QueryDocumentSnapshot> upcoming = [];
         List<QueryDocumentSnapshot> past = [];
-        List<QueryDocumentSnapshot> due = [];
 
         for (var doc in snapshot.data!.docs) {
           var assignment = doc.data() as Map<String, dynamic>;
@@ -48,10 +47,8 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
 
           if (dueDate.isAfter(now)) {
             upcoming.add(doc);
-          } else if (dueDate.isBefore(now)) {
-            past.add(doc);
           } else {
-            due.add(doc);
+            past.add(doc);
           }
         }
 
@@ -62,7 +59,6 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
               controller: _tabController,
               tabs: const [
                 Tab(text: "Upcoming"),
-                Tab(text: "Due Today"),
                 Tab(text: "Past"),
               ],
             ),
@@ -71,7 +67,6 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
                 controller: _tabController,
                 children: [
                   _buildSection(upcoming, "No upcoming assignments", context),
-                  _buildSection(due, "No due assignments", context),
                   _buildSection(past, "No past assignments", context),
                 ],
               ),

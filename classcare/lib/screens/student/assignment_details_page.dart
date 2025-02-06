@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AssignmentDetailPage extends StatefulWidget {
   final QueryDocumentSnapshot assignment;
@@ -19,28 +20,22 @@ class AssignmentDetailPage extends StatefulWidget {
 class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   bool _isSubmitting = false;
 
- Future<void> downloadFile(String pdfUrl) async {
-  try {
-    final Dio dio = Dio();
-    Directory? downloadsDir = Directory('/storage/emulated/0/Download');
-    // Get internal storage directory
-    final String fileName = Uri.parse(pdfUrl).pathSegments.last;
-    final String savePath = '${downloadsDir.path}/$fileName';
+  Future<void> downloadFile(String fileUrl) async {
+    final Uri uri = Uri.parse(fileUrl);
+    try {
+      print("hiii");
 
-    await dio.download(pdfUrl, savePath);
-    print("hiii");
-    print(savePath);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("File downloaded to: $savePath")),
-    );
-  } catch (e) {
-    print("ERROR");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Download failed: $e")),
-    );
+      print("hiii2");
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+      print("hiii3");
+    } catch (e) {
+      print("ERROR");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Download failed: $e")),
+      );
+    }
   }
-}
-
 
   Future<void> uploadSubmission() async {
     final result = await FilePicker.platform.pickFiles();
@@ -54,7 +49,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
     final file = result.files.single;
 
     try {
-      final storageRef = FirebaseStorage.instance.ref().child(  
+      final storageRef = FirebaseStorage.instance.ref().child(
           'assignments/${widget.assignment.id}/submissions/${file.name}');
       await storageRef.putData(file.bytes!);
 
@@ -93,47 +88,45 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-  var data = widget.assignment.data() as Map<String, dynamic>;
+    var data = widget.assignment.data() as Map<String, dynamic>;
 
-  String title = data['title'] ?? "No Title"; // Default value
-  String description = data['description'] ?? "No Description";
-  String dueDate = data['dueDate'] ?? "No Due Date";
-  String? pdfUrl = data['pdfUrl']; // Can be null
+    String title = data['title'] ?? "No Title"; // Default value
+    String description = data['description'] ?? "No Description";
+    String dueDate = data['dueDate'] ?? "No Due Date";
+    String? fileUrl = data['fileUrl']; // Can be null
 
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(title),
-    ),
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Due Date: $dueDate", style: TextStyle(fontSize: 16)),
-          const SizedBox(height: 16),
-          Text("Description:", style: TextStyle(fontSize: 18)),
-          Text(description, style: TextStyle(fontSize: 16)),
-          const SizedBox(height: 16),
-          Text("Download Assignment:", style: TextStyle(fontSize: 18)),
-
-          pdfUrl != null
-              ? TextButton(
-                  onPressed: () => downloadFile(pdfUrl),
-                  child: const Text("Download File"),
-                )
-              : const Text("No file available"),
-
-          const SizedBox(height: 16),
-          Text("Submit Your Assignment:", style: TextStyle(fontSize: 18)),
-          ElevatedButton(
-            onPressed: _isSubmitting ? null : uploadSubmission,
-            child: _isSubmitting
-                ? const CircularProgressIndicator()
-                : const Text("Upload Submission"),
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
       ),
-    ),
-  );
-}
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Due Date: $dueDate", style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 16),
+            Text("Description:", style: TextStyle(fontSize: 18)),
+            Text(description, style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 16),
+            Text("Download Assignment:", style: TextStyle(fontSize: 18)),
+            fileUrl != null
+                ? TextButton(
+                    onPressed: () => downloadFile(fileUrl),
+                    child: const Text("Download File"),
+                  )
+                : const Text("No file available"),
+            const SizedBox(height: 16),
+            Text("Submit Your Assignment:", style: TextStyle(fontSize: 18)),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : uploadSubmission,
+              child: _isSubmitting
+                  ? const CircularProgressIndicator()
+                  : const Text("Upload Submission"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -22,12 +22,8 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _dueDate;
   PlatformFile? _pickedFile;
-<<<<<<< HEAD
   String? _filePath; // Store the file path
-=======
-  String? _filePath;
   bool _isUploading = false;
->>>>>>> a85976cddead7877366701f0645a60f769311d5a
 
   @override
   void dispose() {
@@ -38,21 +34,13 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
 
   Future<void> pickFile() async {
     try {
-<<<<<<< HEAD
-      FilePickerResult? result = await FilePicker.platform.pickFiles(withReadStream: true); 
-=======
       FilePickerResult? result =
           await FilePicker.platform.pickFiles(withReadStream: true);
->>>>>>> a85976cddead7877366701f0645a60f769311d5a
 
       if (result != null && result.files.isNotEmpty) {
         setState(() {
           _pickedFile = result.files.first;
-<<<<<<< HEAD
           _filePath = result.files.first.path; // Store file path for upload
-=======
-          _filePath = result.files.first.path;
->>>>>>> a85976cddead7877366701f0645a60f769311d5a
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,34 +54,6 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
     }
   }
 
-<<<<<<< HEAD
-    Future<void> uploadAssignment() async {
-  if (_titleController.text.trim().isEmpty ||
-      _descriptionController.text.trim().isEmpty ||
-      _dueDate == null ||
-      _pickedFile == null ||
-      _filePath == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please complete all fields and upload a file')),
-    );
-    return;
-  }
-
-  try {
-    String assignmentId = FirebaseFirestore.instance
-        .collection('classes')
-        .doc(widget.classId)
-        .collection('assignments')
-        .doc()
-        .id;
-
-    // ✅ Get the correct file extension
-    String fileExtension = _pickedFile!.extension ?? 'unknown';
-    
-    if (fileExtension == 'unknown') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('File type not recognized')),
-=======
   Future<void> uploadAssignment() async {
     if (_titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty ||
@@ -103,25 +63,10 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Please complete all fields and upload a file')),
->>>>>>> a85976cddead7877366701f0645a60f769311d5a
       );
       return;
     }
 
-<<<<<<< HEAD
-    // ✅ Save file with original extension
-    Reference storageRef = FirebaseStorage.instance
-        .ref()
-        .child('assignments/${widget.classId}/$assignmentId.$fileExtension');
-
-    UploadTask uploadTask;
-    
-    // ✅ Handle file upload differently for Web and Mobile
-    if (kIsWeb) {
-      uploadTask = storageRef.putData(_pickedFile!.bytes!);
-    } else {
-      uploadTask = storageRef.putFile(File(_filePath!));
-=======
     setState(() {
       _isUploading = true;
     });
@@ -168,7 +113,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
         'description': _descriptionController.text.trim(),
         'dueDate': DateFormat('yyyy-MM-dd').format(_dueDate!),
         'uploadedBy': FirebaseAuth.instance.currentUser!.uid,
-        'fileUrl': fileUrl,
+        'fileUrl': fileUrl, // Store the correct file URL
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -191,46 +136,8 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
       setState(() {
         _isUploading = false;
       });
->>>>>>> a85976cddead7877366701f0645a60f769311d5a
     }
-
-    TaskSnapshot snapshot = await uploadTask;
-    String fileUrl = await snapshot.ref.getDownloadURL();
-
-    await FirebaseFirestore.instance
-        .collection('classes')
-        .doc(widget.classId)
-        .collection('assignments')
-        .doc(assignmentId)
-        .set({
-      'assignmentId': assignmentId,
-      'title': _titleController.text.trim(),
-      'description': _descriptionController.text.trim(),
-      'dueDate': _dueDate!.toIso8601String(),
-      'uploadedBy': FirebaseAuth.instance.currentUser!.uid,
-      'fileUrl': fileUrl, // ✅ Store the correct file URL
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Assignment uploaded successfully!')),
-    );
-
-    _titleController.clear();
-    _descriptionController.clear();
-    setState(() {
-      _dueDate = null;
-      _pickedFile = null;
-      _filePath = null;
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to upload assignment: $e')),
-    );
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -303,13 +210,9 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
             children: [
               _pickedFile == null
                   ? const Text("No file selected")
-<<<<<<< HEAD
-                  : Expanded(child: Text(_pickedFile!.name, overflow: TextOverflow.ellipsis)),
-=======
                   : Expanded(
                       child: Text(_pickedFile!.name,
                           overflow: TextOverflow.ellipsis)),
->>>>>>> a85976cddead7877366701f0645a60f769311d5a
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: pickFile,
