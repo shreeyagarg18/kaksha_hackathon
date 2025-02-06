@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import for formatting dates
+import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 
 class AssignmentUploadWidget extends StatefulWidget {
   final String classId;
@@ -19,6 +21,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _dueDate;
   PlatformFile? _pickedFile;
+  String? _filePath; // Store the file path
 
   @override
   void dispose() {
@@ -29,10 +32,12 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
 
   Future<void> pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
-      if (result != null) {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(withReadStream: true); 
+
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
           _pickedFile = result.files.first;
+          _filePath = result.files.first.path; // Store file path for upload
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -40,67 +45,93 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
         );
       }
     } catch (e) {
-      print("Error picking file: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to pick file')),
+        SnackBar(content: Text('Error picking file: $e')),
       );
     }
   }
 
-  Future<void> uploadAssignment() async {
-    if (_titleController.text.trim().isEmpty || _dueDate == null || _pickedFile == null) {
+    Future<void> uploadAssignment() async {
+  if (_titleController.text.trim().isEmpty ||
+      _descriptionController.text.trim().isEmpty ||
+      _dueDate == null ||
+      _pickedFile == null ||
+      _filePath == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please complete all fields and upload a file')),
+    );
+    return;
+  }
+
+  try {
+    String assignmentId = FirebaseFirestore.instance
+        .collection('classes')
+        .doc(widget.classId)
+        .collection('assignments')
+        .doc()
+        .id;
+
+    // ✅ Get the correct file extension
+    String fileExtension = _pickedFile!.extension ?? 'unknown';
+    
+    if (fileExtension == 'unknown') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields and upload a file')),
+        const SnackBar(content: Text('File type not recognized')),
       );
       return;
     }
 
-    try {
-      String assignmentId = FirebaseFirestore.instance
-          .collection('classes')
-          .doc(widget.classId)
-          .collection('assignments')
-          .doc()
-          .id;
+    // ✅ Save file with original extension
+    Reference storageRef = FirebaseStorage.instance
+        .ref()
+        .child('assignments/${widget.classId}/$assignmentId.$fileExtension');
 
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('assignments/${widget.classId}/$assignmentId.pdf');
-
-      await storageRef.putData(_pickedFile!.bytes!);
-      String pdfUrl = await storageRef.getDownloadURL();
-
-      await FirebaseFirestore.instance
-          .collection('classes')
-          .doc(widget.classId)
-          .collection('assignments')
-          .doc(assignmentId)
-          .set({
-        'assignmentId': assignmentId,
-        'title': _titleController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'dueDate': _dueDate!.toIso8601String(),
-        'uploadedBy': FirebaseAuth.instance.currentUser!.uid,
-        'pdfUrl': pdfUrl,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assignment uploaded successfully!')),
-      );
-
-      _titleController.clear();
-      _descriptionController.clear();
-      setState(() {
-        _dueDate = null;
-        _pickedFile = null;
-      });
-    } catch (e) {
-      print("Error uploading assignment: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload assignment')),
-      );
+    UploadTask uploadTask;
+    
+    // ✅ Handle file upload differently for Web and Mobile
+    if (kIsWeb) {
+      uploadTask = storageRef.putData(_pickedFile!.bytes!);
+    } else {
+      uploadTask = storageRef.putFile(File(_filePath!));
     }
+
+    TaskSnapshot snapshot = await uploadTask;
+    String fileUrl = await snapshot.ref.getDownloadURL();
+
+    await FirebaseFirestore.instance
+        .collection('classes')
+        .doc(widget.classId)
+        .collection('assignments')
+        .doc(assignmentId)
+        .set({
+      'assignmentId': assignmentId,
+      'title': _titleController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'dueDate': _dueDate!.toIso8601String(),
+      'uploadedBy': FirebaseAuth.instance.currentUser!.uid,
+      'fileUrl': fileUrl, // ✅ Store the correct file URL
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Assignment uploaded successfully!')),
+    );
+
+    _titleController.clear();
+    _descriptionController.clear();
+    setState(() {
+      _dueDate = null;
+      _pickedFile = null;
+      _filePath = null;
+    });
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to upload assignment: $e')),
+    );
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +190,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
             children: [
               _pickedFile == null
                   ? const Text("No file selected")
-                  : Text(_pickedFile!.name),
+                  : Expanded(child: Text(_pickedFile!.name, overflow: TextOverflow.ellipsis)),
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: pickFile,

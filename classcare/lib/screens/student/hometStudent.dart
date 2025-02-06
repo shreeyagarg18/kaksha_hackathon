@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:classcare/screens/StudentClassDetails.dart';  // Make sure to import the correct page for class details
+import 'package:classcare/screens/student/StudentClassDetails.dart';  // Make sure to import the correct page for class details
 
 class homeStudent extends StatefulWidget {
   @override
@@ -75,7 +75,7 @@ class _homeStudentstate extends State<homeStudent> {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => Studentclassdetails(
+                            builder: (context) => StudentClassDetails(
                               classId: classData['classId'],
                               className: classData['className'],
                             ),

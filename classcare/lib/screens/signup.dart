@@ -1,5 +1,5 @@
-import 'package:classcare/screens/homeTeacher.dart';
-import 'package:classcare/screens/hometStudent.dart';
+import 'package:classcare/screens/teacher/homeTeacher.dart';
+import 'package:classcare/screens/student/hometStudent.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'login.dart'; // Import your LoginPage

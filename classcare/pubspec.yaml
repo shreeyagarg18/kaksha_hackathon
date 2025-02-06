@@ -45,6 +45,12 @@ dependencies:
   google_sign_in:
   http:
   flutter_secure_storage:
+  firebase_app_check: ^0.3.2+1
+  flutter_pdfview: ^1.0.0
+  dio: ^5.8.0+1
+  path_provider: ^2.1.5
+  open_file_plus: ^3.4.1+1
+  permission_handler: ^11.0.1
 
 dev_dependencies:
   flutter_test:

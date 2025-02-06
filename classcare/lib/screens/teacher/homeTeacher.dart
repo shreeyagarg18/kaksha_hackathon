@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:classcare/screens/classDetailsPage.dart';
+import 'package:classcare/screens/teacher/classDetailsPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
