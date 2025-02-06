@@ -1,6 +1,8 @@
+import 'package:classcare/widgets/teacher_assignment_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:classcare/widgets/assignment_upload_widget.dart';
 
@@ -25,7 +27,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -100,6 +102,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.assignment), text: "Current Assignments"),
+            Tab(icon: Icon(Icons.assignment), text: "Past Assignment"),
             Tab(icon: Icon(Icons.upload_file), text: "Upload Assignment"),
           ],
         ),
@@ -108,56 +111,16 @@ class _ClassDetailPageState extends State<ClassDetailPage>
         controller: _tabController,
         children: [
           // Section for Current Assignments
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('classes')
-                  .doc(widget.classId)
-                  .collection('assignments')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text("No assignments uploaded."));
-                }
-
-                return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
-                  itemBuilder: (context, index) {
-                    var assignment = snapshot.data!.docs[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ExpansionTile(
-                        title: Text(assignment['title']),
-                        subtitle: Text("Due Date: ${assignment['dueDate']}"),
-                        children: [
-                          ListTile(
-                            title: const Text("Description:"),
-                            subtitle: Text(assignment['description']),
-                          ),
-                          ListTile(
-                            title: const Text("Download PDF:"),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.download),
-                              onPressed: () async {
-                                String pdfUrl = assignment['pdfUrl'];
-                                await launchUrl(Uri.parse(pdfUrl));
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+          AssignmentList(
+            classId: widget.classId,
+            isCurrent: true, // Show current assignments
           ),
-          // Section for Uploading New Assignment
+
+          // Past Assignments
+          AssignmentList(
+            classId: widget.classId,
+            isCurrent: false, // Show past assignments
+          ),
           AssignmentUploadWidget(classId: widget.classId),
         ],
       ),
