@@ -211,7 +211,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         "Teacher Name: ${classData['teacherName']}",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[850],
+                          color: const Color.fromRGBO(48, 48, 48, 1),
                         ),
                       ),
                       SizedBox(height: 12),

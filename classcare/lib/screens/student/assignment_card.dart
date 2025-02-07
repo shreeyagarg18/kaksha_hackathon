@@ -4,8 +4,8 @@ import 'package:classcare/screens/student/assignment_details_page.dart';
 
 class AssignmentCard extends StatelessWidget {
   final QueryDocumentSnapshot assignment;
-
-  const AssignmentCard({super.key, required this.assignment});
+  String classId;
+  AssignmentCard({super.key, required this.assignment , required this.classId});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class AssignmentCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AssignmentDetailPage(assignment: assignment),
+              builder: (context) => AssignmentDetailPage(assignment: assignment ,classId: classId, ),
             ),
           );
         },

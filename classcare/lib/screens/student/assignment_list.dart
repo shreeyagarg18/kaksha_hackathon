@@ -5,7 +5,7 @@ import 'package:classcare/screens/student/assignment_card.dart';
 class AssignmentList extends StatefulWidget {
   final String classId;
 
-  const AssignmentList({super.key, required this.classId});
+  const AssignmentList({super.key, required this.classId });
 
   @override
   _AssignmentListState createState() => _AssignmentListState();
@@ -66,8 +66,8 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildSection(upcoming, "No upcoming assignments", context),
-                  _buildSection(past, "No past assignments", context),
+                  _buildSection(upcoming, "No upcoming assignments", context,widget.classId),
+                  _buildSection(past, "No past assignments", context,widget.classId),
                 ],
               ),
             ),
@@ -77,12 +77,12 @@ class _AssignmentListState extends State<AssignmentList> with SingleTickerProvid
     );
   }
 
-  Widget _buildSection(List<QueryDocumentSnapshot> assignments, String emptyMessage, BuildContext context) {
+  Widget _buildSection(List<QueryDocumentSnapshot> assignments, String emptyMessage, BuildContext context,String classId) {
     if (assignments.isEmpty) {
       return Center(child: Text(emptyMessage));
     }
     return ListView(
-      children: assignments.map((doc) => AssignmentCard(assignment: doc)).toList(),
+      children: assignments.map((doc) => AssignmentCard(assignment: doc , classId: classId,)).toList(),
     );
   }
 }
