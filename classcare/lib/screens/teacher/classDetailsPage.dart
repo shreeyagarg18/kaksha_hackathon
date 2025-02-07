@@ -1,10 +1,8 @@
-import 'package:classcare/widgets/teacher_assignment_list.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:classcare/screens/teacher/students_list.dart';
+import 'package:classcare/screens/teacher/assignments_tab.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:classcare/widgets/assignment_upload_widget.dart';
 
 class ClassDetailPage extends StatefulWidget {
   final String classId;
@@ -27,7 +25,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -101,27 +99,16 @@ class _ClassDetailPageState extends State<ClassDetailPage>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.assignment), text: "Current Assignments"),
-            Tab(icon: Icon(Icons.assignment), text: "Past Assignment"),
-            Tab(icon: Icon(Icons.upload_file), text: "Upload Assignment"),
+            Tab(icon: Icon(Icons.people), text: "Students"),
+            Tab(icon: Icon(Icons.assignment), text: "Assignments"),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Section for Current Assignments
-          AssignmentList(
-            classId: widget.classId,
-            isCurrent: true, // Show current assignments
-          ),
-
-          // Past Assignments
-          AssignmentList(
-            classId: widget.classId,
-            isCurrent: false, // Show past assignments
-          ),
-          AssignmentUploadWidget(classId: widget.classId),
+          StudentsList(classId: widget.classId),
+          AssignmentsTab(classId: widget.classId),
         ],
       ),
     );

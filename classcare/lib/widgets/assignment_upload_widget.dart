@@ -89,7 +89,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
       }
 
       Reference storageRef = FirebaseStorage.instance.ref().child(
-          'assignments/${widget.classId}/$assignmentId/$assignmentId.$fileExtension');
+          'classes/${widget.classId}/assignments/$assignmentId/teacher/$assignmentId.$fileExtension');
 
       UploadTask uploadTask;
 
@@ -141,93 +141,96 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Upload New Assignment",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _titleController,
-            decoration: const InputDecoration(
-              labelText: 'Assignment Title',
-              border: OutlineInputBorder(),
+    return Scaffold(
+      appBar: AppBar(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Upload New Assignment",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _descriptionController,
-            decoration: const InputDecoration(
-              labelText: 'Assignment Description',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Assignment Title',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Text(_dueDate == null
-                  ? "No due date selected"
-                  : "Due Date: ${DateFormat('yyyy-MM-dd').format(_dueDate!)}"),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () async {
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2101),
-                  );
-
-                  if (pickedDate != null) {
-                    TimeOfDay? pickedTime = await showTimePicker(
+            const SizedBox(height: 10),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Assignment Description',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Text(_dueDate == null
+                    ? "No due date selected"
+                    : "Due Date: ${DateFormat('yyyy-MM-dd').format(_dueDate!)}"),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    DateTime? pickedDate = await showDatePicker(
                       context: context,
-                      initialTime: TimeOfDay.now(),
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2101),
                     );
-
-                    if (pickedTime != null) {
-                      setState(() {
-                        _dueDate = DateTime(
-                          pickedDate.year,
-                          pickedDate.month,
-                          pickedDate.day,
-                          pickedTime.hour,
-                          pickedTime.minute,
-                        );
-                      });
+      
+                    if (pickedDate != null) {
+                      TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+      
+                      if (pickedTime != null) {
+                        setState(() {
+                          _dueDate = DateTime(
+                            pickedDate.year,
+                            pickedDate.month,
+                            pickedDate.day,
+                            pickedTime.hour,
+                            pickedTime.minute,
+                          );
+                        });
+                      }
                     }
-                  }
-                },
-                child: const Text("Select Due Date & Time"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _pickedFile == null
-                  ? const Text("No file selected")
-                  : Expanded(
-                      child: Text(_pickedFile!.name,
-                          overflow: TextOverflow.ellipsis)),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: pickFile,
-                child: const Text("Select File"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _isUploading
-              ? const Center(child: CircularProgressIndicator())
-              : ElevatedButton(
-                  onPressed: uploadAssignment,
-                  child: const Text("Upload Assignment"),
+                  },
+                  child: const Text("Select Due Date & Time"),
                 ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _pickedFile == null
+                    ? const Text("No file selected")
+                    : Expanded(
+                        child: Text(_pickedFile!.name,
+                            overflow: TextOverflow.ellipsis)),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: pickFile,
+                  child: const Text("Select File"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _isUploading
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: uploadAssignment,
+                    child: const Text("Upload Assignment"),
+                  ),
+          ],
+        ),
       ),
     );
   }

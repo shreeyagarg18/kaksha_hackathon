@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'assignment_detail_screen.dart';
 
 class AssignmentList extends StatelessWidget {
   final String classId;
@@ -48,50 +48,32 @@ class AssignmentList extends StatelessWidget {
             itemCount: assignments.length,
             itemBuilder: (context, index) {
               var assignment = assignments[index];
+
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ExpansionTile(
+                child: ListTile(
                   title: Text(assignment['title']),
                   subtitle: Text(
                     "Due Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(assignment['dueDate']))}",
                   ),
-                  children: [
-                    ListTile(
-                      title: const Text("Description:"),
-                      subtitle: Text(assignment['description']),
-                    ),
-                    ListTile(
-                      title: const Text("Download File:"),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.download),
-                        onPressed: () async {
-                          String fileUrl = assignment['fileUrl'];
-                          print("gg");
-                          print(fileUrl);
-                          final Uri uri = Uri.parse(fileUrl);
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    // Navigate to AssignmentDetailScreen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AssignmentDetailScreen(
+                          classId: classId,
+                          assignmentId: assignment['assignmentId'],
 
-                          try {
-                            print("hiii");
-                            
-                              print("hiii2");
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          
-                              print("hiii3");
-                              
-                              
-                            
-                          } catch (e) {
-                            print("Error launching URL: $e"); // Log the error
-                            ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(
-                                content: Text('An error occurred while opening the file.'),
-                              )
-                            );
-                          }
-                        },
+                          title: assignment['title'],
+                          description: assignment['description'],
+                          dueDate: assignment['dueDate'],
+                          fileUrl: assignment['fileUrl'],
+                        ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               );
             },

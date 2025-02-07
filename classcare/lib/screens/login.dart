@@ -1,24 +1,24 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classcare/screens/teacher/homeTeacher.dart';
 import 'package:classcare/screens/student/hometStudent.dart';
 import 'package:classcare/screens/signup.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({super.key , required this.post});
-  String post;
+  LoginPage({super.key, required this.post});
+  final String post;
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Initializing controllers for email and password fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _errorMessage;
+  bool isLoading = false; // State for loading animation
 
-  // Dispose of the controllers when the widget is disposed
   @override
   void dispose() {
     _emailController.dispose();
@@ -26,22 +26,28 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // Login function using Firebase Auth
   Future<void> _login() async {
+    setState(() {
+      isLoading = true; // Start loading animation
+      _errorMessage = null;
+    });
+
     try {
       UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).get();
       if (userDoc.exists) {
         String? role = userDoc.data()?['role'];
         if (role == widget.post) {
-          if(role=='Teacher'){
-             Navigator.pushReplacement(context,MaterialPageRoute(builder: (BuildContext context) =>  TeacherDashboard()));
-          }else{
-             Navigator.pushReplacement(context,MaterialPageRoute(builder: (BuildContext context) => homeStudent()));
-
+          if (role == 'Teacher') {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => TeacherDashboard()));
+          } else {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => homeStudent()));
           }
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
         } else {
@@ -54,23 +60,24 @@ class _LoginPageState extends State<LoginPage> {
           _errorMessage = "User data not found. Please contact support.";
         });
       }
-      
-  } on FirebaseAuthException catch (e) {
-    setState(() {
-      // Handle specific error codes
-      if (e.code == 'user-not-found') {
-        _errorMessage = "No account found with this email. Please sign up.";
-      } else if (e.code == 'wrong-password') {
-        _errorMessage = "Incorrect password. Please try again.";
-      } else if (e.code == 'invalid-email') {
-        _errorMessage = "The email address is badly formatted. Please check and try again.";
-      } else {
-        _errorMessage = "An error occurred. Please try again.";
-      }
-    });
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        if (e.code == 'user-not-found') {
+          _errorMessage = "No account found with this email. Please sign up.";
+        } else if (e.code == 'wrong-password') {
+          _errorMessage = "Incorrect password. Please try again.";
+        } else if (e.code == 'invalid-email') {
+          _errorMessage = "Invalid email format. Please check and try again.";
+        } else {
+          _errorMessage = "An error occurred. Please try again.";
+        }
+      });
+    } finally {
+      setState(() {
+        isLoading = false; // Stop loading animation
+      });
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -98,13 +105,22 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
               ],
               ElevatedButton(
-                onPressed: _login, // Calling login function when the button is pressed
+                onPressed: isLoading ? null : _login, // Disable button while loading
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
-                child: const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
+                child: isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ],
           ),
@@ -113,7 +129,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Registered text widget
   Widget _registeredText() {
     return const Text(
       'Log In',
@@ -125,10 +140,9 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Email field widget
   Widget _emailField() {
     return TextField(
-      controller: _emailController, // Set the controller for email input
+      controller: _emailController,
       decoration: InputDecoration(
         labelText: 'Email',
         labelStyle: const TextStyle(color: Colors.blue),
@@ -141,11 +155,10 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Password field widget
   Widget _passwordField() {
     return TextField(
-      controller: _passwordController, // Set the controller for password input
-      obscureText: true, // Hide the password input
+      controller: _passwordController,
+      obscureText: true,
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: const TextStyle(color: Colors.blue),
@@ -158,7 +171,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Sign-up text widget
   Widget _signupText(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 30),
@@ -166,13 +178,15 @@ class _LoginPageState extends State<LoginPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
-            'Don\'t have an account?',
+            "Don't have an account?",
             style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.blueGrey),
           ),
           TextButton(
             onPressed: () {
               Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (BuildContext context) => SignupPage(post: widget.post,)));
+                context,
+                MaterialPageRoute(builder: (context) => SignupPage(post: widget.post)),
+              );
             },
             child: const Text(
               'Sign Up',
