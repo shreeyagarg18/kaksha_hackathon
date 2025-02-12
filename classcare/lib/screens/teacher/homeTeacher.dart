@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:classcare/screens/classDetailsPage.dart';
+import 'package:classcare/screens/teacher/classDetailsPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -218,7 +218,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         "Teacher Name: ${classData['teacherName']}",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[850],
+                          color: const Color.fromRGBO(48, 48, 48, 1),
                         ),
                       ),
                       SizedBox(height: 12),
