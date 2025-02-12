@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class TeacherDashboard extends StatefulWidget {
+  const TeacherDashboard({super.key});
+
   @override
   _TeacherDashboardState createState() => _TeacherDashboardState();
 }
@@ -18,16 +20,20 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     _classNameController.dispose();
     super.dispose();
   }
+
+  @override
   void initState() {
     super.initState();
     fetchTeacherName();
   }
+
   String generateJoinCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     Random rand = Random();
     return List.generate(6, (index) => chars[rand.nextInt(chars.length)])
         .join();
   }
+
   Future<void> fetchTeacherName() async {
     try {
       String teacherId = FirebaseAuth.instance.currentUser!.uid;
@@ -46,6 +52,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       );
     }
   }
+
   Future<void> createClass(String className, String slot) async {
     try {
       String classId =
@@ -106,7 +113,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Create New Class"),
-        content: Container(
+        content: SizedBox(
           height: 150,
           child: Column(
             children: [
@@ -225,15 +232,15 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                             ),
                           ),
                         ),
-                        child: Text(
-                          'View Class',
-                          style: TextStyle(color: Colors.black),
-                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white, // Button color
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                        ),
+                        child: Text(
+                          'View Class',
+                          style: TextStyle(color: Colors.black),
                         ),
                       ),
                     ],

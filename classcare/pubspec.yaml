@@ -45,6 +45,9 @@ dependencies:
   google_sign_in:
   http:
   flutter_secure_storage:
+  pdf_render: ^1.4.12
+  image: ^4.5.2
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

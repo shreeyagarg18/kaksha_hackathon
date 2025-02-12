@@ -8,7 +8,7 @@ import 'package:intl/intl.dart'; // Import for formatting dates
 class AssignmentUploadWidget extends StatefulWidget {
   final String classId;
 
-  const AssignmentUploadWidget({Key? key, required this.classId}) : super(key: key);
+  const AssignmentUploadWidget({super.key, required this.classId});
 
   @override
   _AssignmentUploadWidgetState createState() => _AssignmentUploadWidgetState();
@@ -48,9 +48,12 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
   }
 
   Future<void> uploadAssignment() async {
-    if (_titleController.text.trim().isEmpty || _dueDate == null || _pickedFile == null) {
+    if (_titleController.text.trim().isEmpty ||
+        _dueDate == null ||
+        _pickedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields and upload a file')),
+        const SnackBar(
+            content: Text('Please complete all fields and upload a file')),
       );
       return;
     }
@@ -144,11 +147,9 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2101),
                   );
-                  if (pickedDate != null) {
-                    setState(() {
-                      _dueDate = pickedDate;
-                    });
-                  }
+                  setState(() {
+                    _dueDate = pickedDate;
+                  });
                 },
                 child: const Text("Select Due Date"),
               ),
