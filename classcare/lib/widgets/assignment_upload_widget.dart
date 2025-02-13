@@ -21,7 +21,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _dueDate;
   PlatformFile? _pickedFile;
-  String? _filePath; // Store the file path
+  String? _filePath;
   PlatformFile? _rubricFile;
   String? _rubricFilePath;
   bool _isUploading = false;
@@ -142,7 +142,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
         'description': _descriptionController.text.trim(),
         'dueDate': DateFormat('yyyy-MM-dd').format(_dueDate!),
         'uploadedBy': FirebaseAuth.instance.currentUser!.uid,
-        'rubricUrl': rubricUrl,
+        'rubricUrl': rubricUrl, // Ensure this is saved
         'fileUrl': assignmentUrl,
         'timestamp': FieldValue.serverTimestamp(),
       });

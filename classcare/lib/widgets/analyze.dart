@@ -1,46 +1,30 @@
-// pdf_upload_service.dart
-
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
-import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf_render/pdf_render.dart';
-import 'package:http/http.dart' as http;
 
 class PDFUploadService {
-  // pdf_upload_service.dart
-  Future<void> uploadPDF(String fileUrl, Function(String) onResult) async {
+  Future<String> extractTextFromPDF(String fileUrl) async {
     try {
       final response = await http.get(Uri.parse(fileUrl));
-      print("gg");
       if (response.statusCode == 200) {
-        // Get the temporary directory to store the file
         final tempDir = await getTemporaryDirectory();
         final filePath = '${tempDir.path}/downloaded_file.pdf';
 
-        // Save the file to the device
         File file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
 
-        // Now you have the file and can proceed with your processing
         List<String> imagePaths = await _convertPdfToImages(file);
-
-        // Extract text using Google Vision
         String extractedText = await extractTextFromImages(imagePaths);
-        print("hii");
-        print(extractedText);
-        // Send the extracted text to Gemini for analysis
-        String geminiResponse = await sendToGeminiAPI(extractedText);
-        print("hii2");
-        print(geminiResponse);
-        // Return the analysis response
-        onResult(geminiResponse);
+
+        return extractedText;
       } else {
-        onResult('Failed to download file');
+        throw Exception('Failed to download file: ${response.statusCode}');
       }
     } catch (e) {
-      onResult('Error: $e');
+      throw Exception('Error extracting text from PDF: $e');
     }
   }
 
@@ -65,7 +49,6 @@ class PDFUploadService {
       await file.writeAsBytes(buffer);
       imagePaths.add(imagePath);
 
-      // Dispose of the image to free up memory
       image.dispose();
     }
     return imagePaths;
@@ -78,22 +61,20 @@ class PDFUploadService {
       final imageBytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(imageBytes);
 
-      final payload = jsonEncode({
-        "requests": [
-          {
-            "image": {"content": base64Image},
-            "features": [
-              {"type": "DOCUMENT_TEXT_DETECTION"}
-            ]
-          }
-        ]
-      });
-
       final response = await http.post(
         Uri.parse(
             'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao'),
         headers: {'Content-Type': 'application/json'},
-        body: payload,
+        body: jsonEncode({
+          "requests": [
+            {
+              "image": {"content": base64Image},
+              "features": [
+                {"type": "DOCUMENT_TEXT_DETECTION"}
+              ]
+            }
+          ]
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -101,58 +82,53 @@ class PDFUploadService {
         String text =
             responseBody["responses"][0]["fullTextAnnotation"]["text"];
         extractedText += "$text\n\n";
-      } else {
-        print("Failed to extract text from $imagePath");
       }
     }
     return extractedText;
   }
 
-  Future<String> sendToGeminiAPI(String extractedText) async {
-    const apiKey =
-        'AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao'; // Replace with actual API key
+  Future<String> sendToGeminiAPI(
+      String assignmentText, String rubricText, String studentText) async {
+    const apiKey = 'AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao';
     const url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
     String prompt = '''
-    The extracted text from the PDF is:
-    $extractedText
-    Please analyze this text and provide a professional and user-friendly summary. Format the output in a manner that is easy to read and should not exceed 100 words.
-    ''';
+    Assignment Text:
+    $assignmentText
 
-    final requestPayload = {
-      "contents": [
-        {
-          "parts": [
-            {
-              "text": prompt,
-            }
-          ]
-        }
-      ]
-    };
+    Rubric Text:
+    $rubricText
+
+    Student Submission Text:
+    $studentText
+
+    Analyze the student's submission based on the assignment instructions and rubric. Provide a detailed evaluation and assign a score out of 100.
+    ''';
 
     try {
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestPayload),
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {"text": prompt}
+              ]
+            }
+          ]
+        }),
       );
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
         if (jsonResponse['candidates'] != null &&
             jsonResponse['candidates'].isNotEmpty) {
-          final candidate =
-              jsonResponse['candidates'][0]['content']['parts'][0]['text'];
-          return candidate;
-        } else {
-          return 'No response from Gemini API.';
+          return jsonResponse['candidates'][0]['content']['parts'][0]['text'];
         }
-      } else {
-        print("Failed to get Gemini response");
-        return 'Error: ${response.statusCode}, Response Body: ${response.body}';
       }
+      return 'Error analyzing submission';
     } catch (e) {
       return 'Error: $e';
     }
