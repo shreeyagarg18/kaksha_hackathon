@@ -6,7 +6,7 @@ import 'package:classcare/screens/student/hometStudent.dart';
 import 'package:classcare/screens/signup.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({super.key, required this.post});
+  const LoginPage({super.key, required this.post});
   final String post;
 
   @override
@@ -33,23 +33,28 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userCredential.user?.uid).get();
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user?.uid)
+          .get();
       if (userDoc.exists) {
         String? role = userDoc.data()?['role'];
         if (role == widget.post) {
           if (role == 'Teacher') {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => TeacherDashboard()));
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => TeacherDashboard()));
           } else {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => homeStudent()));
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => homeStudent()));
           }
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login successful')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Login successful')));
         } else {
           setState(() {
             _errorMessage = "Access denied: You are not a $role.";
@@ -105,11 +110,14 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
               ],
               ElevatedButton(
-                onPressed: isLoading ? null : _login, // Disable button while loading
+                onPressed:
+                    isLoading ? null : _login, // Disable button while loading
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
                 ),
                 child: isLoading
                     ? const SizedBox(
@@ -120,7 +128,8 @@ class _LoginPageState extends State<LoginPage> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    : const Text('Login',
+                        style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
             ],
           ),
@@ -149,7 +158,8 @@ class _LoginPageState extends State<LoginPage> {
         hintText: 'Enter Email',
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
@@ -165,7 +175,8 @@ class _LoginPageState extends State<LoginPage> {
         hintText: 'Enter Password',
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
       ),
     );
@@ -179,18 +190,23 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           const Text(
             "Don't have an account?",
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: Colors.blueGrey),
+            style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: Colors.blueGrey),
           ),
           TextButton(
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => SignupPage(post: widget.post)),
+                MaterialPageRoute(
+                    builder: (context) => SignupPage(post: widget.post)),
               );
             },
             child: const Text(
               'Sign Up',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.blueAccent),
             ),
           ),
         ],

@@ -7,8 +7,8 @@ class AssignmentList extends StatelessWidget {
   final String classId;
   final bool isCurrent;
 
-  const AssignmentList({Key? key, required this.classId, required this.isCurrent})
-      : super(key: key);
+  const AssignmentList(
+      {super.key, required this.classId, required this.isCurrent});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,6 @@ class AssignmentList extends StatelessWidget {
                         builder: (context) => AssignmentDetailScreen(
                           classId: classId,
                           assignmentId: assignment['assignmentId'],
-
                           title: assignment['title'],
                           description: assignment['description'],
                           dueDate: assignment['dueDate'],

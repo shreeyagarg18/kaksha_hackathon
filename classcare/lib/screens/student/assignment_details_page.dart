@@ -11,7 +11,8 @@ class AssignmentDetailPage extends StatefulWidget {
   final QueryDocumentSnapshot assignment;
   final String classId;
 
-  AssignmentDetailPage({super.key, required this.assignment, required this.classId});
+  const AssignmentDetailPage(
+      {super.key, required this.assignment, required this.classId});
 
   @override
   _AssignmentDetailPageState createState() => _AssignmentDetailPageState();
@@ -49,7 +50,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         setState(() {
           _isSubmitted = true;
           _submittedFileUrl = submissionSnapshot['fileUrl'];
-          _submittedFileName = _submittedFileUrl?.split('/').last ?? "Submitted File";
+          _submittedFileName =
+              _submittedFileUrl?.split('/').last ?? "Submitted File";
         });
       }
     } catch (e) {
@@ -106,13 +108,16 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
     try {
       String studentId = FirebaseAuth.instance.currentUser!.uid;
-      String studentName = await FirebaseFirestore.instance.collection('users').doc(studentId).get().then((doc) => doc['name'] ?? 'No name found');
+      String studentName = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(studentId)
+          .get()
+          .then((doc) => doc['name'] ?? 'No name found');
 
       String fileExtension = _pickedFile!.extension ?? 'pdf';
 
       Reference storageRef = FirebaseStorage.instance.ref().child(
-    'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/student/${_pickedFile!.name}');
-
+          'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/student/${_pickedFile!.name}');
 
       UploadTask uploadTask;
 
@@ -133,7 +138,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
           .collection('submissions')
           .doc(studentId)
           .set({
-            'studentName':studentName,
+        'studentName': studentName,
         'studentId': studentId,
         'fileUrl': fileUrl,
         'submittedAt': Timestamp.now(),
@@ -162,7 +167,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   }
 
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     var data = widget.assignment.data() as Map<String, dynamic>;
     String title = data['title'] ?? "No Title";
     String description = data['description'] ?? "No Description";
@@ -197,7 +202,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                 ],
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -227,9 +232,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Assignment File Download Section
                   if (fileUrl != null)
                     Card(
@@ -244,9 +249,9 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                         ),
                       ),
                     ),
-                    
+
                   const SizedBox(height: 24),
-                  
+
                   // Submission Status Section
                   Card(
                     elevation: 2,
@@ -258,22 +263,28 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                           Row(
                             children: [
                               Icon(
-                                _isSubmitted ? Icons.check_circle : Icons.pending,
-                                color: _isSubmitted ? Colors.green : Colors.orange,
+                                _isSubmitted
+                                    ? Icons.check_circle
+                                    : Icons.pending,
+                                color:
+                                    _isSubmitted ? Colors.green : Colors.orange,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                _isSubmitted ? "Submitted" : "Pending Submission",
+                                _isSubmitted
+                                    ? "Submitted"
+                                    : "Pending Submission",
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: _isSubmitted ? Colors.green : Colors.orange,
+                                  color: _isSubmitted
+                                      ? Colors.green
+                                      : Colors.orange,
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          
                           if (!_isSubmitted) ...[
                             // File Selection Area
                             Container(
@@ -289,7 +300,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          _pickedFile?.name ?? "No file selected",
+                                          _pickedFile?.name ??
+                                              "No file selected",
                                           style: TextStyle(
                                             color: Colors.grey.shade700,
                                           ),
@@ -298,10 +310,18 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                       const SizedBox(width: 8),
                                       ElevatedButton.icon(
                                         onPressed: pickFile,
-                                        icon: const Icon(Icons.attach_file,color: Colors.white,),
-                                        label: const Text("Choose File" , style: TextStyle(color: Colors.white),),
+                                        icon: const Icon(
+                                          Icons.attach_file,
+                                          color: Colors.white,
+                                        ),
+                                        label: const Text(
+                                          "Choose File",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Theme.of(context).colorScheme.primary,
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
                                       ),
                                     ],
@@ -314,9 +334,11 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: _isSubmitting ? null : uploadSubmission,
+                                onPressed:
+                                    _isSubmitting ? null : uploadSubmission,
                                 style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                 ),
                                 child: _isSubmitting
                                     ? const SizedBox(
@@ -336,7 +358,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                             // Submitted File Section
                             ListTile(
                               leading: const Icon(Icons.insert_drive_file),
-                              title: Text(_submittedFileName ?? "Submitted File"),
+                              title:
+                                  Text(_submittedFileName ?? "Submitted File"),
                               trailing: IconButton(
                                 icon: const Icon(Icons.download),
                                 onPressed: _submittedFileUrl != null

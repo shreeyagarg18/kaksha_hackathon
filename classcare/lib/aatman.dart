@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -95,95 +94,97 @@ class _homeStudent1state extends State<homeStudent1> {
     return imagePaths;
   }
 
-Future<String> extractTextFromImages(List<String> imagePaths) async {
-  String extractedText = "";
+  Future<String> extractTextFromImages(List<String> imagePaths) async {
+    String extractedText = "";
 
-  for (String imagePath in imagePaths) {
-    File imageFile = File(imagePath);
-    final imageBytes = await imageFile.readAsBytes();
-    final base64Image = base64Encode(imageBytes);
+    for (String imagePath in imagePaths) {
+      File imageFile = File(imagePath);
+      final imageBytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(imageBytes);
 
-    final payload = jsonEncode({
-      "requests": [
-        {
-          "image": {"content": base64Image},
-          "features": [
-            {"type": "TEXT_DETECTION"}  // Use TEXT_DETECTION instead of DOCUMENT_TEXT_DETECTION
-          ]
+      final payload = jsonEncode({
+        "requests": [
+          {
+            "image": {"content": base64Image},
+            "features": [
+              {
+                "type": "TEXT_DETECTION"
+              } // Use TEXT_DETECTION instead of DOCUMENT_TEXT_DETECTION
+            ]
+          }
+        ]
+      });
+
+      final response = await http.post(
+        Uri.parse(
+            'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao'),
+        headers: {'Content-Type': 'application/json'},
+        body: payload,
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        List<dynamic> annotations =
+            responseBody["responses"][0]["textAnnotations"];
+
+        if (annotations.isNotEmpty) {
+          // Full detected text
+          String fullText = annotations[0]["description"];
+
+          // Extract bounding boxes
+          List<Map<String, dynamic>> words = [];
+          for (var i = 1; i < annotations.length; i++) {
+            words.add({
+              "text": annotations[i]["description"],
+              "vertices": annotations[i]["boundingPoly"]["vertices"]
+            });
+          }
+          print("WORDS!!");
+          print(words);
+          // Identify words that are strikethrough
+          List<String> filteredWords = filterStrikethroughWords(words);
+
+          // Reconstruct final text without strikethrough words
+          extractedText = "${filteredWords.join(" ")}\n\n";
         }
-      ]
-    });
-
-    final response = await http.post(
-      Uri.parse(
-          'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao'),
-      headers: {'Content-Type': 'application/json'},
-      body: payload,
-    );
-
-    if (response.statusCode == 200) {
-      final responseBody = jsonDecode(response.body);
-      List<dynamic> annotations = responseBody["responses"][0]["textAnnotations"];
-
-      if (annotations.isNotEmpty) {
-        // Full detected text
-        String fullText = annotations[0]["description"];
-
-        // Extract bounding boxes
-        List<Map<String, dynamic>> words = [];
-        for (var i = 1; i < annotations.length; i++) {
-          words.add({
-            "text": annotations[i]["description"],
-            "vertices": annotations[i]["boundingPoly"]["vertices"]
-          });
-        }
-      print("WORDS!!");
-      print(words);
-        // Identify words that are strikethrough
-        List<String> filteredWords = filterStrikethroughWords(words);
-
-        // Reconstruct final text without strikethrough words
-        extractedText = filteredWords.join(" ") + "\n\n";
+      } else {
+        print("Failed to extract text from $imagePath");
+        print("API Response: ${response.body}");
       }
-    } else {
-      print("Failed to extract text from $imagePath");
-      print("API Response: ${response.body}");
     }
+    return extractedText;
   }
-  return extractedText;
-}
 
 // Function to filter out strikethrough words based on bounding box positions
-List<String> filterStrikethroughWords(List<Map<String, dynamic>> words) {
-  List<String> filteredWords = [];
-  
-  for (int i = 0; i < words.length; i++) {
-    var word = words[i];
-    List<dynamic> vertices = word["vertices"];
-    
-    // Extract y-coordinates of top and bottom edges
-    double topY = vertices[0]["y"].toDouble();
-    double bottomY = vertices[2]["y"].toDouble();
-    
-    // Check if there's a horizontal line crossing through the middle of the word
-    bool hasStrikethrough = words.any((other) {
-      List<dynamic> otherVertices = other["vertices"];
-      double otherTopY = otherVertices[0]["y"].toDouble();
-      double otherBottomY = otherVertices[2]["y"].toDouble();
+  List<String> filterStrikethroughWords(List<Map<String, dynamic>> words) {
+    List<String> filteredWords = [];
 
-      // If a line's y-coordinates are within the middle range of the word, it's a strikethrough
-      return (otherTopY >= topY + (bottomY - topY) * 0.4) &&
-             (otherBottomY <= topY + (bottomY - topY) * 0.6);
-    });
+    for (int i = 0; i < words.length; i++) {
+      var word = words[i];
+      List<dynamic> vertices = word["vertices"];
 
-    if (!hasStrikethrough) {
-      filteredWords.add(word["text"]);
+      // Extract y-coordinates of top and bottom edges
+      double topY = vertices[0]["y"].toDouble();
+      double bottomY = vertices[2]["y"].toDouble();
+
+      // Check if there's a horizontal line crossing through the middle of the word
+      bool hasStrikethrough = words.any((other) {
+        List<dynamic> otherVertices = other["vertices"];
+        double otherTopY = otherVertices[0]["y"].toDouble();
+        double otherBottomY = otherVertices[2]["y"].toDouble();
+
+        // If a line's y-coordinates are within the middle range of the word, it's a strikethrough
+        return (otherTopY >= topY + (bottomY - topY) * 0.4) &&
+            (otherBottomY <= topY + (bottomY - topY) * 0.6);
+      });
+
+      if (!hasStrikethrough) {
+        filteredWords.add(word["text"]);
+      }
     }
+
+    return filteredWords;
   }
-
-  return filteredWords;
-}
-
 
   Future<String> sendToGeminiAPI(String extractedText) async {
     const apiKey =
