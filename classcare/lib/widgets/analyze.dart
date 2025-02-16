@@ -103,7 +103,20 @@ class PDFUploadService {
     Student Submission Text:
     $studentText
 
-    Analyze the student's submission based on the assignment instructions and rubric. Provide a detailed evaluation and assign a score out of 100.
+    Analyze the student's submission based on the assignment instructions and rubric. For each question, understand the question from the "assignmentText" , get the correct answer from the rubrics from "rubricText", tally with answer of the student from the "studentText". Check how much similar the answer is to the rubrics, look for keywords match with the student's submission for that question. If the final answer is wrong, give step marks. Award full marks when it is completely match with the rubrics. Consider each question to be of 10 marks each(there might be sub questions of different denominations like 3+7, 5+5, etc). If the question is attempted give atleast 2 marks.  
+    Give the response in this json format.
+    "student":{
+    total marks:
+    "Q1":{
+    "Marks":
+    "Feedback":(only the topic names, where the student is stropng or weak)
+    }
+    "Q2":{
+    "Marks":
+    "Feedback":
+    }
+    }
+    Strictly follow the JSON
     ''';
 
     try {
