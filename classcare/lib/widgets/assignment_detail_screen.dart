@@ -30,41 +30,61 @@ class AssignmentDetailScreen extends StatefulWidget {
 
 class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
   final PDFUploadService _pdfService = PDFUploadService();
-  bool _isAnalyzing = false;
+  Map<String, bool> _isAnalyzingMap = {};
 
-  Future<void> _analyzeSubmission(String studentFileUrl) async {
+  Future<void> _analyzeSubmission(
+      String studentFileUrl, String submissionId) async {
     setState(() {
-      _isAnalyzing = true;
+      _isAnalyzingMap = {
+        submissionId: true
+      }; // Only mark the clicked submission as analyzing
     });
 
     try {
-      // Extract text from all three files
       String assignmentText =
           await _pdfService.extractTextFromPDF(widget.fileUrl);
       String rubricText =
           await _pdfService.extractTextFromPDF(widget.rubricUrl);
       String studentText = await _pdfService.extractTextFromPDF(studentFileUrl);
 
-      // Send extracted texts to Gemini for analysis
       String result = await _pdfService.sendToGeminiAPI(
           assignmentText, rubricText, studentText);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result)),
-        );
+        _showResultDialog(result); // Show result in a dialog box
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error analyzing submission: $e')),
-        );
+        _showResultDialog(
+            'Error analyzing submission: $e'); // Show error in dialog
       }
     } finally {
       setState(() {
-        _isAnalyzing = false;
+        _isAnalyzingMap.remove(submissionId);
       });
     }
+  }
+
+  void _showResultDialog(String result) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Analysis Result"),
+          content: SingleChildScrollView(
+            child: Text(result),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -121,49 +141,75 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (snapshot.data!.docs.isEmpty) {
+                int submissionCount = snapshot.data!.docs.length;
+                print("NUMBER_SUBMISSIONS: $submissionCount");
+
+                if (submissionCount == 0) {
                   return const Center(child: Text("No submissions yet"));
                 }
 
-                return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
-                  itemBuilder: (context, index) {
-                    var submission = snapshot.data!.docs[index];
-                    return Card(
-                      margin: const EdgeInsets.all(8),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            title: Text(submission['studentName'] ?? 'Unknown'),
-                            subtitle: Text(submission['submittedAt'] != null
-                                ? DateFormat('dd MMM, hh:mm a').format(
-                                    (submission['submittedAt'] as Timestamp)
-                                        .toDate())
-                                : 'No submission date'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "NUMBER_SUBMISSIONS: $submissionCount",
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: submissionCount,
+                        itemBuilder: (context, index) {
+                          var submission = snapshot.data!.docs[index];
+                          String submissionId = submission.id;
+                          return Card(
+                            margin: const EdgeInsets.all(8),
+                            child: Column(
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.download),
-                                  onPressed: () =>
-                                      _downloadFile(submission['fileUrl']),
-                                ),
-                                ElevatedButton(
-                                  onPressed: _isAnalyzing
-                                      ? null
-                                      : () => _analyzeSubmission(
-                                          submission['fileUrl']),
-                                  child: Text(_isAnalyzing
-                                      ? 'Analyzing...'
-                                      : 'Analyze'),
+                                ListTile(
+                                  title: Text(
+                                      submission['studentName'] ?? 'Unknown'),
+                                  subtitle: Text(
+                                      submission['submittedAt'] != null
+                                          ? DateFormat('dd MMM, hh:mm a')
+                                              .format((submission['submittedAt']
+                                                      as Timestamp)
+                                                  .toDate())
+                                          : 'No submission date'),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.download),
+                                        onPressed: () => _downloadFile(
+                                            submission['fileUrl']),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed:
+                                            _isAnalyzingMap[submissionId] ==
+                                                    true
+                                                ? null
+                                                : () => _analyzeSubmission(
+                                                    submission['fileUrl'],
+                                                    submissionId),
+                                        child: Text(
+                                            _isAnalyzingMap[submissionId] ==
+                                                    true
+                                                ? 'Analyzing...'
+                                                : 'Analyze'),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 );
               },
             ),

@@ -17,8 +17,11 @@ class PDFUploadService {
         await file.writeAsBytes(response.bodyBytes);
 
         List<String> imagePaths = await _convertPdfToImages(file);
-        String extractedText = await extractTextFromImages(imagePaths);
+        print("Generated Image Paths: $imagePaths");
 
+        String extractedText = await extractTextFromImages(imagePaths);
+        print("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+        print(extractedText);
         return extractedText;
       } else {
         throw Exception('Failed to download file: ${response.statusCode}');
@@ -51,19 +54,55 @@ class PDFUploadService {
 
       image.dispose();
     }
+
     return imagePaths;
   }
 
   Future<String> extractTextFromImages(List<String> imagePaths) async {
+    if (imagePaths.isEmpty) return "";
+
+    int totalImages = imagePaths.length;
+    int half = (totalImages / 2).ceil();
+    List<String> firstHalf = imagePaths.sublist(0, half);
+    List<String> secondHalf = imagePaths.sublist(half);
+
+    //print("First Half Images: $firstHalf");
+    //print("Second Half Images: $secondHalf");
+
+    Future<String> firstHalfText = _processImageBatch(
+        firstHalf, "AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao", "API_1");
+    Future<String> secondHalfText = _processImageBatch(
+        secondHalf, "AIzaSyB4mpffbJQfgCzdBX_z6dELHqSRI0hvg_I", "API_2");
+
+    List<String> results = await Future.wait([firstHalfText, secondHalfText]);
+
+    //print("Extracted First Half Text: ${results[0]}");
+    //print("Extracted Second Half Text: ${results[1]}");
+
+    return results.join();
+  }
+
+  Future<String> _processImageBatch(
+      List<String> imagePaths, String apiKey, String apiLabel) async {
     String extractedText = "";
+
+    //print("Processing $apiLabel with images: $imagePaths");
+
     for (String imagePath in imagePaths) {
       File imageFile = File(imagePath);
+      if (!await imageFile.exists()) {
+        print("Error: Image $imagePath does not exist.");
+        continue;
+      }
+
+      //print("Processing image: $imagePath with $apiLabel");
+
       final imageBytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(imageBytes);
 
       final response = await http.post(
         Uri.parse(
-            'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao'),
+            'https://vision.googleapis.com/v1/images:annotate?key=$apiKey'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "requests": [
@@ -79,19 +118,29 @@ class PDFUploadService {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-        String text =
-            responseBody["responses"][0]["fullTextAnnotation"]["text"];
-        extractedText += "$text\n\n";
+        if (responseBody["responses"] != null &&
+            responseBody["responses"].isNotEmpty) {
+          String text =
+              responseBody["responses"][0]["fullTextAnnotation"]["text"] ?? "";
+          print("Extracted text from $imagePath: $text");
+          extractedText += "$text\n";
+        } else {
+          print("No text found in $imagePath");
+        }
+      } else {
+        print("Error ${response.statusCode} for $imagePath: ${response.body}");
       }
     }
+
+    //print("Final extracted text for $apiLabel: $extractedText");
     return extractedText;
   }
 
   Future<String> sendToGeminiAPI(
       String assignmentText, String rubricText, String studentText) async {
-    const apiKey = 'AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao';
+    const apiKey = 'AIzaSyDONNPmqMxTQ2gHdUvRdgAZPNKz_1c1YpQ';
     const url =
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
+        'https://generativelanguage.googleapis.com/v1beta/tunedModels/copy-of-analysis-model-pq5mo65ip7q1:generateContent?key=$apiKey';
 
     String prompt = '''
     Assignment Text:
@@ -102,21 +151,10 @@ class PDFUploadService {
 
     Student Submission Text:
     $studentText
-
     Analyze the student's submission based on the assignment instructions and rubric. For each question, understand the question from the "assignmentText" , get the correct answer from the rubrics from "rubricText", tally with answer of the student from the "studentText". Check how much similar the answer is to the rubrics, look for keywords match with the student's submission for that question. If the final answer is wrong, give step marks. Award full marks when it is completely match with the rubrics. Consider each question to be of 10 marks each(there might be sub questions of different denominations like 3+7, 5+5, etc). If the question is attempted give atleast 2 marks.  
-    Give the response in this json format.
-    "student":{
-    total marks:
-    "Q1":{
-    "Marks":
-    "Feedback":(only the topic names, where the student is stropng or weak)
-    }
-    "Q2":{
-    "Marks":
-    "Feedback":
-    }
-    }
-    Strictly follow the JSON
+    Give the response in this string format.Be very liberal while giving marks.
+    "Marks"_"Feedback"
+    Strictly follow the format
     ''';
 
     try {
@@ -138,6 +176,7 @@ class PDFUploadService {
         final jsonResponse = jsonDecode(response.body);
         if (jsonResponse['candidates'] != null &&
             jsonResponse['candidates'].isNotEmpty) {
+          print(jsonResponse);
           return jsonResponse['candidates'][0]['content']['parts'][0]['text'];
         }
       }
