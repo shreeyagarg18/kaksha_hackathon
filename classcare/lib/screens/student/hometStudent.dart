@@ -1,22 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:classcare/screens/student/StudentClassDetails.dart';  // Make sure to import the correct page for class details
+import 'package:classcare/screens/student/StudentClassDetails.dart'; // Make sure to import the correct page for class details
 
 class homeStudent extends StatefulWidget {
+  const homeStudent({super.key});
+
   @override
   _homeStudentstate createState() => _homeStudentstate();
 }
 
 class _homeStudentstate extends State<homeStudent> {
-  TextEditingController _joinCodeController = TextEditingController();
+  final TextEditingController _joinCodeController = TextEditingController();
 
   // Display the classes the student has joined
   Widget buildStudentClassList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('classes')
-          .where('students', arrayContains: FirebaseAuth.instance.currentUser!.uid)
+          .where('students',
+              arrayContains: FirebaseAuth.instance.currentUser!.uid)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -32,8 +35,7 @@ class _homeStudentstate extends State<homeStudent> {
             var classData = doc.data() as Map<String, dynamic>;
             String colorHex = classData['color'] ??
                 '#FFFFFF'; // Default to white if no color is found
-            Color cardColor = Color(int.parse(
-                '0xFF${colorHex.substring(1)}'));
+            Color cardColor = Color(int.parse('0xFF${colorHex.substring(1)}'));
             return Padding(
               padding: const EdgeInsets.all(20.0),
               child: Card(
@@ -65,10 +67,7 @@ class _homeStudentstate extends State<homeStudent> {
                       SizedBox(height: 8),
                       Text(
                         "Teacher Name: ${classData['teacherName']}",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700]
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                       ),
                       SizedBox(height: 12),
                       ElevatedButton(
@@ -81,12 +80,15 @@ class _homeStudentstate extends State<homeStudent> {
                             ),
                           ),
                         ),
-                        child: Text('View Class',style: TextStyle(color: Colors.black),),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white, // Button color
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                        ),
+                        child: Text(
+                          'View Class',
+                          style: TextStyle(color: Colors.black),
                         ),
                       ),
                     ],
@@ -115,7 +117,8 @@ class _homeStudentstate extends State<homeStudent> {
 
         // Add the student's ID to the 'students' array in the class document
         await classDoc.reference.update({
-          'students': FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
+          'students':
+              FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -153,13 +156,13 @@ class _homeStudentstate extends State<homeStudent> {
             onPressed: () {
               joinClass(_joinCodeController.text.trim());
             },
-            child: Text('Join Class'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue, // Button color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
+            child: Text('Join Class'),
           ),
         ],
       ),
@@ -213,13 +216,13 @@ class _homeStudentstate extends State<homeStudent> {
                   },
                 );
               },
-              child: Text('Join a New Class'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue, // Button color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              child: Text('Join a New Class'),
             ),
           ),
         ],

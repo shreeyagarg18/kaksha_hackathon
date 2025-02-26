@@ -1,255 +1,215 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'analyze.dart';
 
-class AssignmentDetailScreen extends StatelessWidget {
+class AssignmentDetailScreen extends StatefulWidget {
   final String classId;
   final String assignmentId;
   final String title;
   final String description;
   final String dueDate;
   final String fileUrl;
+  final String rubricUrl;
 
   const AssignmentDetailScreen({
-    Key? key,
+    super.key,
     required this.classId,
     required this.assignmentId,
     required this.title,
     required this.description,
     required this.dueDate,
     required this.fileUrl,
-  }) : super(key: key);
+    required this.rubricUrl,
+  });
 
-  Future<List<Map<String, dynamic>>> fetchSubmissions() async {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('classes')
-        .doc(classId)
-        .collection('assignments')
-        .doc(assignmentId)
-        .collection('submissions')
-        .get();
+  @override
+  State<AssignmentDetailScreen> createState() => _AssignmentDetailScreenState();
+}
 
-    return snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
+  final PDFUploadService _pdfService = PDFUploadService();
+  Map<String, bool> _isAnalyzingMap = {};
+
+  Future<void> _analyzeSubmission(
+      String studentFileUrl, String submissionId) async {
+    setState(() {
+      _isAnalyzingMap = {
+        submissionId: true
+      }; // Only mark the clicked submission as analyzing
+    });
+
+    try {
+      String assignmentText =
+          await _pdfService.extractTextFromPDF(widget.fileUrl);
+      String rubricText =
+          await _pdfService.extractTextFromPDF(widget.rubricUrl);
+      String studentText = await _pdfService.extractTextFromPDF(studentFileUrl);
+
+      String result = await _pdfService.sendToGeminiAPI(
+          assignmentText, rubricText, studentText);
+
+      if (mounted) {
+        _showResultDialog(result); // Show result in a dialog box
+      }
+    } catch (e) {
+      if (mounted) {
+        _showResultDialog(
+            'Error analyzing submission: $e'); // Show error in dialog
+      }
+    } finally {
+      setState(() {
+        _isAnalyzingMap.remove(submissionId);
+      });
+    }
+  }
+
+  void _showResultDialog(String result) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Analysis Result"),
+          content: SingleChildScrollView(
+            child: Text(result),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
-   Widget build(BuildContext context) {
-    DateTime parsedDate = DateTime.parse(dueDate);
-    String formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(parsedDate);
+  Widget build(BuildContext context) {
+    DateTime parsedDate = DateTime.parse(widget.dueDate);
+    String formattedDate =
+        DateFormat('dd MMM yyyy, hh:mm a').format(parsedDate);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title.isEmpty ? 'No title' : title),
+        title: Text(widget.title),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () {
-              // TODO: Implement edit assignment functionality
-            },
-            tooltip: 'Edit Assignment',
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Assignment Info Card
           Card(
             margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
             child: Column(
               children: [
-                // Assignment Details
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        description.isEmpty ? 'No description provided' : description,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.5,
-                        ),
-                      ),
+                      Text(widget.description),
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           const Icon(Icons.calendar_today, size: 16),
                           const SizedBox(width: 8),
-                          Text(
-                            "Set for $formattedDate",
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
-                            ),
-                          ),
+                          Text("Due: $formattedDate"),
                         ],
                       ),
                     ],
                   ),
                 ),
-                
-                // Assignment File Button
-                InkWell(
-                  onTap: () async {
-                    final Uri uri = Uri.parse(fileUrl);
-                    try {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Error opening file.')),
-                        );
-                      }
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(color: Colors.grey.shade200),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.file_present_outlined,
-                          color: Colors.blue.shade700,
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            "View Assignment File",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const Icon(
-                          Icons.download_outlined,
-                          color: Colors.blue,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildFileDownloadButton(widget.fileUrl, "View Assignment"),
+                if (widget.rubricUrl.isNotEmpty)
+                  _buildFileDownloadButton(widget.rubricUrl, "View Rubric"),
               ],
             ),
           ),
-
-          // Submissions Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Text(
-                  "Student Submissions",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-              ],
-            ),
-          ),
-
-          // Submissions List
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: fetchSubmissions(),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('classes')
+                  .doc(widget.classId)
+                  .collection('assignments')
+                  .doc(widget.assignmentId)
+                  .collection('submissions')
+                  .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.assignment_outlined,
-                          size: 48,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "No submissions yet",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                int submissionCount = snapshot.data!.docs.length;
+                print("NUMBER_SUBMISSIONS: $submissionCount");
+
+                if (submissionCount == 0) {
+                  return const Center(child: Text("No submissions yet"));
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: snapshot.data!.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    var submission = snapshot.data![index];
-                    String studentName = submission['studentName'] ?? 'No name';
-                    String studentFileUrl = submission['fileUrl'] ?? '';
-                    Timestamp? submittedAt = submission['submittedAt'] as Timestamp?;
-                    String submittedDate = submittedAt != null
-                        ? DateFormat('dd MMM, hh:mm a').format(submittedAt.toDate())
-                        : 'Date not available';
-
-                    return Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "NUMBER_SUBMISSIONS: $submissionCount",
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blue.shade50,
-                          child: Text(
-                            studentName.isNotEmpty ? studentName[0].toUpperCase() : 'N',
-                            style: TextStyle(
-                              color: Colors.blue.shade700,
-                              fontWeight: FontWeight.bold,
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: submissionCount,
+                        itemBuilder: (context, index) {
+                          var submission = snapshot.data!.docs[index];
+                          String submissionId = submission.id;
+                          return Card(
+                            margin: const EdgeInsets.all(8),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  title: Text(
+                                      submission['studentName'] ?? 'Unknown'),
+                                  subtitle: Text(
+                                      submission['submittedAt'] != null
+                                          ? DateFormat('dd MMM, hh:mm a')
+                                              .format((submission['submittedAt']
+                                                      as Timestamp)
+                                                  .toDate())
+                                          : 'No submission date'),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.download),
+                                        onPressed: () => _downloadFile(
+                                            submission['fileUrl']),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed:
+                                            _isAnalyzingMap[submissionId] ==
+                                                    true
+                                                ? null
+                                                : () => _analyzeSubmission(
+                                                    submission['fileUrl'],
+                                                    submissionId),
+                                        child: Text(
+                                            _isAnalyzingMap[submissionId] ==
+                                                    true
+                                                ? 'Analyzing...'
+                                                : 'Analyze'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                        title: Text(
-                          studentName,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: Text(
-                          "Submitted on $submittedDate",
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.download_outlined),
-                          onPressed: () async {
-                            final Uri uri = Uri.parse(studentFileUrl);
-                            try {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Error downloading file.')),
-                                );
-                              }
-                            }
-                          },
-                          tooltip: 'Download submission',
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 );
               },
             ),
@@ -258,5 +218,44 @@ class AssignmentDetailScreen extends StatelessWidget {
       ),
     );
   }
-}
 
+  Widget _buildFileDownloadButton(String url, String label) {
+    return InkWell(
+      onTap: () => _downloadFile(url),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.file_present, color: Colors.blue.shade700),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            const Icon(Icons.download, color: Colors.blue),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _downloadFile(String url) async {
+    final Uri uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error opening file.')),
+        );
+      }
+    }
+  }
+}

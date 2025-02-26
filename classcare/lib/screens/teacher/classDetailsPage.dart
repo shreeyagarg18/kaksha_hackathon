@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classcare/screens/teacher/students_list.dart';
 import 'package:classcare/screens/teacher/assignments_tab.dart';
+import 'package:classcare/screens/teacher/chat_tab.dart'; // Import the new ChatTab
 import 'package:flutter/services.dart';
 
 class ClassDetailPage extends StatefulWidget {
@@ -25,7 +26,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this); // Updated to 3
   }
 
   @override
@@ -101,6 +102,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
           tabs: const [
             Tab(icon: Icon(Icons.people), text: "Students"),
             Tab(icon: Icon(Icons.assignment), text: "Assignments"),
+            Tab(icon: Icon(Icons.chat), text: "Chat"), // Added Chat Tab
           ],
         ),
       ),
@@ -109,6 +111,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
         children: [
           StudentsList(classId: widget.classId),
           AssignmentsTab(classId: widget.classId),
+          ChatTab(classId: widget.classId), // New Chat Tab Screen
         ],
       ),
     );

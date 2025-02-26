@@ -10,8 +10,7 @@ import 'package:flutter/foundation.dart';
 class AssignmentUploadWidget extends StatefulWidget {
   final String classId;
 
-  const AssignmentUploadWidget({Key? key, required this.classId})
-      : super(key: key);
+  const AssignmentUploadWidget({super.key, required this.classId});
 
   @override
   _AssignmentUploadWidgetState createState() => _AssignmentUploadWidgetState();
@@ -22,7 +21,9 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _dueDate;
   PlatformFile? _pickedFile;
-  String? _filePath; // Store the file path
+  String? _filePath;
+  PlatformFile? _rubricFile;
+  String? _rubricFilePath;
   bool _isUploading = false;
 
   @override
@@ -40,7 +41,7 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
       if (result != null && result.files.isNotEmpty) {
         setState(() {
           _pickedFile = result.files.first;
-          _filePath = result.files.first.path; // Store file path for upload
+          _filePath = result.files.first.path;
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -54,15 +55,39 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
     }
   }
 
+  Future<void> pickRubric() async {
+    try {
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(withReadStream: true);
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _rubricFile = result.files.first;
+          _rubricFilePath = result.files.first.path;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No rubric file selected')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking rubric file: $e')),
+      );
+    }
+  }
+
   Future<void> uploadAssignment() async {
     if (_titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty ||
         _dueDate == null ||
         _pickedFile == null ||
-        _filePath == null) {
+        _rubricFile == null ||
+        _filePath == null ||
+        _rubricFilePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please complete all fields and upload a file')),
+            content: Text('Please complete all fields and upload files')),
       );
       return;
     }
@@ -79,28 +104,32 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
           .doc()
           .id;
 
-      String fileExtension = _pickedFile!.extension ?? 'unknown';
-
-      if (fileExtension == 'unknown') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File type not recognized')),
-        );
-        return;
-      }
-
-      Reference storageRef = FirebaseStorage.instance.ref().child(
-          'classes/${widget.classId}/assignments/$assignmentId/teacher/$assignmentId.$fileExtension');
-
-      UploadTask uploadTask;
+      Reference rubricStorageRef = FirebaseStorage.instance.ref().child(
+          'classes/${widget.classId}/assignments/$assignmentId/rubric.pdf');
+      UploadTask rubricUploadTask;
 
       if (kIsWeb) {
-        uploadTask = storageRef.putData(_pickedFile!.bytes!);
+        rubricUploadTask = rubricStorageRef.putData(_rubricFile!.bytes!);
       } else {
-        uploadTask = storageRef.putFile(File(_filePath!));
+        rubricUploadTask = rubricStorageRef.putFile(File(_rubricFilePath!));
       }
 
-      TaskSnapshot snapshot = await uploadTask;
-      String fileUrl = await snapshot.ref.getDownloadURL();
+      TaskSnapshot rubricSnapshot = await rubricUploadTask;
+      String rubricUrl = await rubricSnapshot.ref.getDownloadURL();
+
+      Reference assignmentStorageRef = FirebaseStorage.instance.ref().child(
+          'classes/${widget.classId}/assignments/$assignmentId/teacher_assignment.pdf');
+      UploadTask assignmentUploadTask;
+
+      if (kIsWeb) {
+        assignmentUploadTask =
+            assignmentStorageRef.putData(_pickedFile!.bytes!);
+      } else {
+        assignmentUploadTask = assignmentStorageRef.putFile(File(_filePath!));
+      }
+
+      TaskSnapshot assignmentSnapshot = await assignmentUploadTask;
+      String assignmentUrl = await assignmentSnapshot.ref.getDownloadURL();
 
       await FirebaseFirestore.instance
           .collection('classes')
@@ -113,7 +142,8 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
         'description': _descriptionController.text.trim(),
         'dueDate': DateFormat('yyyy-MM-dd').format(_dueDate!),
         'uploadedBy': FirebaseAuth.instance.currentUser!.uid,
-        'fileUrl': fileUrl, // Store the correct file URL
+        'rubricUrl': rubricUrl, // Ensure this is saved
+        'fileUrl': assignmentUrl,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -126,7 +156,9 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
       setState(() {
         _dueDate = null;
         _pickedFile = null;
+        _rubricFile = null;
         _filePath = null;
+        _rubricFilePath = null;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -183,13 +215,13 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
                       firstDate: DateTime.now(),
                       lastDate: DateTime(2101),
                     );
-      
+
                     if (pickedDate != null) {
                       TimeOfDay? pickedTime = await showTimePicker(
                         context: context,
                         initialTime: TimeOfDay.now(),
                       );
-      
+
                       if (pickedTime != null) {
                         setState(() {
                           _dueDate = DateTime(
@@ -219,6 +251,21 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
                 ElevatedButton(
                   onPressed: pickFile,
                   child: const Text("Select File"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _rubricFile == null
+                    ? const Text("No rubrics selected")
+                    : Expanded(
+                        child: Text(_rubricFile!.name,
+                            overflow: TextOverflow.ellipsis)),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: pickRubric,
+                  child: const Text("Select Rubrics"),
                 ),
               ],
             ),

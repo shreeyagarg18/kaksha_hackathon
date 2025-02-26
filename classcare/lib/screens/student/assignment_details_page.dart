@@ -11,7 +11,8 @@ class AssignmentDetailPage extends StatefulWidget {
   final QueryDocumentSnapshot assignment;
   final String classId;
 
-  AssignmentDetailPage({super.key, required this.assignment, required this.classId});
+  const AssignmentDetailPage(
+      {super.key, required this.assignment, required this.classId});
 
   @override
   _AssignmentDetailPageState createState() => _AssignmentDetailPageState();
@@ -49,7 +50,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         setState(() {
           _isSubmitted = true;
           _submittedFileUrl = submissionSnapshot['fileUrl'];
-          _submittedFileName = _submittedFileUrl?.split('/').last ?? "Submitted File";
+          _submittedFileName =
+              _submittedFileUrl?.split('/').last ?? "Submitted File";
         });
       }
     } catch (e) {
@@ -92,6 +94,42 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
     }
   }
 
+  void addToGoogleCalendar() async {
+  var data = widget.assignment.data() as Map<String, dynamic>;
+  String title = Uri.encodeComponent(data['title'] ?? "No Title");
+  String description = Uri.encodeComponent(data['description'] ?? "No Description");
+  String dueDate = data['dueDate'] ?? "";
+
+  if (dueDate.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Due date not available")),
+    );
+    return;
+  }
+
+  // Convert dueDate to ISO format
+  DateTime dueDateTime = DateTime.parse(dueDate);
+  String formattedDueDate = dueDateTime.toUtc().toIso8601String().replaceAll("-", "").replaceAll(":", "").split(".")[0] + "Z";
+
+  String calendarUrl = "https://www.google.com/calendar/render?action=TEMPLATE"
+      "&text=$title"
+      "&details=$description"
+      "&dates=$formattedDueDate/$formattedDueDate";
+
+  Uri uri = Uri.parse(calendarUrl);
+  
+  try {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (e) {
+    print("Error launching URL: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Could not open Google Calendar")),
+    );
+  }
+}
+
+
+
   Future<void> uploadSubmission() async {
     if (_pickedFile == null || _filePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,13 +144,16 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
     try {
       String studentId = FirebaseAuth.instance.currentUser!.uid;
-      String studentName = await FirebaseFirestore.instance.collection('users').doc(studentId).get().then((doc) => doc['name'] ?? 'No name found');
+      String studentName = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(studentId)
+          .get()
+          .then((doc) => doc['name'] ?? 'No name found');
 
       String fileExtension = _pickedFile!.extension ?? 'pdf';
 
       Reference storageRef = FirebaseStorage.instance.ref().child(
-    'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/student/${_pickedFile!.name}');
-
+          'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/student/${_pickedFile!.name}');
 
       UploadTask uploadTask;
 
@@ -133,7 +174,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
           .collection('submissions')
           .doc(studentId)
           .set({
-            'studentName':studentName,
+        'studentName': studentName,
         'studentId': studentId,
         'fileUrl': fileUrl,
         'submittedAt': Timestamp.now(),
@@ -162,199 +203,220 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   }
 
   @override
-   Widget build(BuildContext context) {
-    var data = widget.assignment.data() as Map<String, dynamic>;
+Widget build(BuildContext context) {
+  double screenWidth = MediaQuery.of(context).size.width;
+  double screenHeight = MediaQuery.of(context).size.height;
+  var data = widget.assignment.data() as Map<String, dynamic>;
     String title = data['title'] ?? "No Title";
     String description = data['description'] ?? "No Description";
     String dueDate = data['dueDate'] ?? "No Due Date";
     String? fileUrl = data['fileUrl'];
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(title),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+  return Scaffold(
+    appBar: AppBar(
+      elevation: 0,
+      title: Text(
+        title,
+        style: TextStyle(fontSize: screenWidth * 0.05),
       ),
-      body: SingleChildScrollView(
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      foregroundColor: Colors.white,
+    ),
+    body: SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth * 0.04), // Responsive padding
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Due Date Banner
             Container(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: EdgeInsets.symmetric(
+                vertical: screenHeight * 0.015,
+                horizontal: screenWidth * 0.04,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(screenWidth * 0.02),
+              ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.calendar_today, size: screenWidth * 0.05),
+                  SizedBox(width: screenWidth * 0.02),
                   Text(
                     "Due: $dueDate",
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.035,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Description Card
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
+
+            SizedBox(height: screenHeight * 0.02), // Responsive spacing
+
+            // Description Card
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: EdgeInsets.all(screenWidth * 0.03),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             "Description",
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: screenWidth * 0.04,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: screenHeight * 0.01),
                           Text(
                             description,
-                            style: const TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: screenWidth * 0.035),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Assignment File Download Section
-                  if (fileUrl != null)
-                    Card(
-                      elevation: 2,
-                      child: ListTile(
-                        leading: const Icon(Icons.assignment),
-                        title: const Text("Assignment File"),
-                        subtitle: const Text("Click to download"),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.download),
-                          onPressed: () => downloadFile(fileUrl),
+                    ElevatedButton.icon(
+                      onPressed: addToGoogleCalendar,
+                      icon: Icon(Icons.calendar_today, size: screenWidth * 0.05,color: Colors.white,),
+                      label: Text(
+                        "Add to Calendar",
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.035,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    
-                  const SizedBox(height: 24),
-                  
-                  // Submission Status Section
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                _isSubmitted ? Icons.check_circle : Icons.pending,
-                                color: _isSubmitted ? Colors.green : Colors.orange,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _isSubmitted ? "Submitted" : "Pending Submission",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: _isSubmitted ? Colors.green : Colors.orange,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          
-                          if (!_isSubmitted) ...[
-                            // File Selection Area
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          _pickedFile?.name ?? "No file selected",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ElevatedButton.icon(
-                                        onPressed: pickFile,
-                                        icon: const Icon(Icons.attach_file,color: Colors.white,),
-                                        label: const Text("Choose File" , style: TextStyle(color: Colors.white),),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Theme.of(context).colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Submit Button
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _isSubmitting ? null : uploadSubmission,
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                ),
-                                child: _isSubmitting
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text(
-                                        "Submit Assignment",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                              ),
-                            ),
-                          ] else ...[
-                            // Submitted File Section
-                            ListTile(
-                              leading: const Icon(Icons.insert_drive_file),
-                              title: Text(_submittedFileName ?? "Submitted File"),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.download),
-                                onPressed: _submittedFileUrl != null
-                                    ? () => downloadFile(_submittedFileUrl!)
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ],
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            // File Download Section
+            if (fileUrl != null)
+              Card(
+                elevation: 2,
+                child: ListTile(
+                  leading: Icon(Icons.assignment, size: screenWidth * 0.06),
+                  title: Text("Assignment File", style: TextStyle(fontSize: screenWidth * 0.04)),
+                  subtitle: Text("Click to download", style: TextStyle(fontSize: screenWidth * 0.03)),
+                  trailing: IconButton(
+                    icon: Icon(Icons.download, size: screenWidth * 0.05),
+                    onPressed: () => downloadFile(fileUrl),
                   ),
-                ],
+                ),
+              ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            // Submission Status Section
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: EdgeInsets.all(screenWidth * 0.04),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _isSubmitted ? Icons.check_circle : Icons.pending,
+                          color: _isSubmitted ? Colors.green : Colors.orange,
+                          size: screenWidth * 0.06,
+                        ),
+                        SizedBox(width: screenWidth * 0.02),
+                        Text(
+                          _isSubmitted ? "Submitted" : "Pending Submission",
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.045,
+                            fontWeight: FontWeight.bold,
+                            color: _isSubmitted ? Colors.green : Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+
+                    if (!_isSubmitted) ...[
+                      // File Selection Area
+                      Container(
+                        padding: EdgeInsets.all(screenWidth * 0.04),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(screenWidth * 0.02),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _pickedFile?.name ?? "No file selected",
+                                    style: TextStyle(color: Colors.grey.shade700, fontSize: screenWidth * 0.03),
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: pickFile,
+                                  icon: Icon(Icons.attach_file, size: screenWidth * 0.05, color: Colors.white),
+                                  label: Text("Choose File", style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.03)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: screenHeight * 0.02),
+
+                      // Submit Button
+                      FractionallySizedBox(
+                        widthFactor: 1, // Makes it full width
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : uploadSubmission,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                          ),
+                          child: _isSubmitting
+                              ? SizedBox(
+                                  height: screenWidth * 0.06,
+                                  width: screenWidth * 0.06,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text("Submit Assignment", style: TextStyle(fontSize: screenWidth * 0.045)),
+                        ),
+                      ),
+                    ] else ...[
+                      // Submitted File Section
+                      ListTile(
+                        leading: Icon(Icons.insert_drive_file, size: screenWidth * 0.06),
+                        title: Text(_submittedFileName ?? "Submitted File", style: TextStyle(fontSize: screenWidth * 0.03)),
+                        trailing: IconButton(
+                          icon: Icon(Icons.download, size: screenWidth * 0.05),
+                          onPressed: _submittedFileUrl != null ? () => downloadFile(_submittedFileUrl!) : null,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

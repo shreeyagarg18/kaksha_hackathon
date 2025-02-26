@@ -7,8 +7,8 @@ class AssignmentList extends StatelessWidget {
   final String classId;
   final bool isCurrent;
 
-  const AssignmentList({Key? key, required this.classId, required this.isCurrent})
-      : super(key: key);
+  const AssignmentList(
+      {super.key, required this.classId, required this.isCurrent});
 
   @override
   Widget build(BuildContext context) {
@@ -48,28 +48,31 @@ class AssignmentList extends StatelessWidget {
             itemCount: assignments.length,
             itemBuilder: (context, index) {
               var assignment = assignments[index];
+              Map<String, dynamic> data =
+                  assignment.data() as Map<String, dynamic>;
 
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
-                  title: Text(assignment['title']),
+                  title: Text(data['title']),
                   subtitle: Text(
-                    "Due Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(assignment['dueDate']))}",
+                    "Due Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(data['dueDate']))}",
                   ),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
-                    // Navigate to AssignmentDetailScreen
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => AssignmentDetailScreen(
                           classId: classId,
-                          assignmentId: assignment['assignmentId'],
-
-                          title: assignment['title'],
-                          description: assignment['description'],
-                          dueDate: assignment['dueDate'],
-                          fileUrl: assignment['fileUrl'],
+                          assignmentId: data['assignmentId'],
+                          title: data['title'],
+                          description: data['description'],
+                          dueDate: data['dueDate'],
+                          fileUrl: data['fileUrl'],
+                          rubricUrl: data.containsKey('rubricUrl')
+                              ? data['rubricUrl']
+                              : '',
                         ),
                       ),
                     );
