@@ -4,8 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
-      
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -19,7 +17,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key}); 
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +28,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home:  Start(),
+      home: Start(),
     );
   }
 }
