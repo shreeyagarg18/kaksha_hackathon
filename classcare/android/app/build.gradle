@@ -1,22 +1,20 @@
 plugins {
     id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
+    id 'com.google.gms.google-services'  // Firebase configuration
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
 android {
     namespace = "com.example.classcare"
-    compileSdk = 34  // Explicitly set compileSdkVersion to 33+
+    compileSdk = 34  // Ensure this matches Flutter SDK
 
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true  // Keep this for desugaring
     }
 
     kotlinOptions {
@@ -26,9 +24,10 @@ android {
     defaultConfig {
         applicationId "com.example.classcare"
         minSdk = 23  // Ensure minimum SDK is set correctly
-        targetSdk = 34  // Update to match the latest supported SDK
+        targetSdk = 34  // Keep this updated
         versionCode flutter.versionCode
         versionName flutter.versionName
+        multiDexEnabled true  // Add this if you face multidex issues
     }
 
     buildTypes {
@@ -45,7 +44,13 @@ flutter {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:32.0.0') // Ensure Firebase BOM is up to date
+    implementation platform('com.google.firebase:firebase-bom:32.0.0')  // Ensure Firebase BOM is up to date
     implementation 'com.google.firebase:firebase-storage'
     implementation 'com.google.firebase:firebase-firestore'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.multidex:multidex:2.0.1'  // For multidex support
+    
+    // Correct way to add desugaring library
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'  // FIXED LINE
 }
+

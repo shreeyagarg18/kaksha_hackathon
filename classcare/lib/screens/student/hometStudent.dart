@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:classcare/screens/student/StudentClassDetails.dart'; // Make sure to import the correct page for class details
+import 'package:device_info_plus/device_info_plus.dart';
 
 class homeStudent extends StatefulWidget {
   const homeStudent({super.key});
@@ -104,39 +105,59 @@ class _homeStudentstate extends State<homeStudent> {
 
   // Function for the student to join a class using a join code
   Future<void> joinClass(String joinCode) async {
-    try {
-      // Search for the class with the given join code
-      QuerySnapshot classSnapshot = await FirebaseFirestore.instance
-          .collection('classes')
-          .where('joinCode', isEqualTo: joinCode)
-          .limit(1)
-          .get();
+  try {
+    // Search for the class with the given join code
+    QuerySnapshot classSnapshot = await FirebaseFirestore.instance
+        .collection('classes')
+        .where('joinCode', isEqualTo: joinCode)
+        .limit(1)
+        .get();
 
-      if (classSnapshot.docs.isNotEmpty) {
-        var classDoc = classSnapshot.docs.first;
+    if (classSnapshot.docs.isNotEmpty) {
+      var classDoc = classSnapshot.docs.first;
+      String userId = FirebaseAuth.instance.currentUser!.uid;
 
-        // Add the student's ID to the 'students' array in the class document
-        await classDoc.reference.update({
-          'students':
-              FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Joined class successfully!')),
-        );
-        Navigator.pop(context); // Close the join class dialog
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid join code.')),
-        );
+      // Get device ID
+      final deviceInfoPlugin = DeviceInfoPlugin();
+      String deviceId = '';
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        var androidInfo = await deviceInfoPlugin.androidInfo;
+        deviceId = androidInfo.id;  // Unique device ID for Android
+      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+        var iosInfo = await deviceInfoPlugin.iosInfo;
+        deviceId = iosInfo.identifierForVendor ?? 'Unknown';  // Unique device ID for iOS
       }
-    } catch (e) {
-      print("Error joining class: $e");
+
+      // Save student ID and device ID to Firestore
+      await classDoc.reference.update({
+        'students': FieldValue.arrayUnion([userId]),
+      });
+
+      await FirebaseFirestore.instance
+          .collection('classes')
+          .doc(classDoc.id)
+          .collection('students')
+          .doc(userId)
+          .set({
+        'deviceId': deviceId,
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to join class. Try again.')),
+        const SnackBar(content: Text('Joined class successfully!')),
+      );
+      Navigator.pop(context);  // Close the join class dialog
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid join code.')),
       );
     }
+  } catch (e) {
+    print("Error joining class: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to join class. Try again.')),
+    );
   }
+}
 
   // UI for entering the join code
   Widget buildJoinClassForm() {
