@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   await Permission.storage.request();
   await Firebase.initializeApp();
   await FirebaseAppCheck.instance.activate(

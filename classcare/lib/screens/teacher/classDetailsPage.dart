@@ -43,8 +43,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
       context, 
       MaterialPageRoute(
         builder: (context) => TakeAttendancePage(
-          classId: widget.classId,
-          className: widget.className,
+          
         ),
       ),
     );
