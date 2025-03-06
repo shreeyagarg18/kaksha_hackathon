@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classcare/screens/teacher/students_list.dart';
 import 'package:classcare/screens/teacher/assignments_tab.dart';
-import 'package:classcare/screens/teacher/chat_tab.dart'; // Import the new ChatTab
+import 'package:classcare/screens/teacher/chat_tab.dart';
 import 'package:flutter/services.dart';
+// Import the new attendance page
+import 'package:classcare/screens/teacher/take_attendance_page.dart'; // Update this path as needed
 
 class ClassDetailPage extends StatefulWidget {
   final String classId;
@@ -26,13 +28,25 @@ class _ClassDetailPageState extends State<ClassDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // Updated to 3
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Navigate to attendance page
+  void _navigateToAttendance() {
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => TakeAttendancePage(
+          
+        ),
+      ),
+    );
   }
 
   Future<void> showRoomCodePopup() async {
@@ -97,21 +111,44 @@ class _ClassDetailPageState extends State<ClassDetailPage>
             tooltip: "Show Room Code",
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.people), text: "Students"),
-            Tab(icon: Icon(Icons.assignment), text: "Assignments"),
-            Tab(icon: Icon(Icons.chat), text: "Chat"), // Added Chat Tab
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          StudentsList(classId: widget.classId),
-          AssignmentsTab(classId: widget.classId),
-          ChatTab(classId: widget.classId), // New Chat Tab Screen
+          // Take Attendance Button
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: ElevatedButton.icon(
+              onPressed: _navigateToAttendance,
+              icon: const Icon(Icons.how_to_reg),
+              label: const Text("Take Attendance"),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+              ),
+            ),
+          ),
+          
+          // TabBar
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.people), text: "Students"),
+              Tab(icon: Icon(Icons.assignment), text: "Assignments"),
+              Tab(icon: Icon(Icons.chat), text: "Chat"),
+            ],
+          ),
+          
+          // TabBarView
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                StudentsList(classId: widget.classId),
+                AssignmentsTab(classId: widget.classId),
+                ChatTab(classId: widget.classId),
+              ],
+            ),
+          ),
         ],
       ),
     );

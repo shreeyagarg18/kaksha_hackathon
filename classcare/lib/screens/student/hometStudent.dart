@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:classcare/screens/student/StudentClassDetails.dart'; // Make sure to import the correct page for class details
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'dart:io';
 
 class homeStudent extends StatefulWidget {
   const homeStudent({super.key});
@@ -103,6 +106,52 @@ class _homeStudentstate extends State<homeStudent> {
   }
 
   // Function for the student to join a class using a join code
+  Future<String> _getBluetoothAddress() async {
+    try {
+      // Request Bluetooth permissions if not already granted
+      await FlutterBluePlus.turnOn(); // Ensure Bluetooth is on
+
+      // Get the Bluetooth address
+      String? bluetoothAddress;
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        // For Android, try to get a unique Bluetooth identifier
+        List<BluetoothDevice> devices = FlutterBluePlus.connectedDevices;
+
+        if (devices.isNotEmpty) {
+          bluetoothAddress = devices.first.remoteId.toString();
+        } else {
+          // If no connected devices, try scanning
+          await FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
+
+          // Wait for scan results
+          await Future.delayed(Duration(seconds: 4));
+
+          // Get scan results and extract devices
+          List<ScanResult> scanResults =
+              await FlutterBluePlus.scanResults.first;
+
+          if (scanResults.isNotEmpty) {
+            bluetoothAddress = scanResults.first.device.remoteId.toString();
+          } else {
+            bluetoothAddress = 'Android-Bluetooth-Unknown';
+          }
+
+          // Stop scanning
+          FlutterBluePlus.stopScan();
+        }
+      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+        // On iOS, getting Bluetooth address directly is challenging
+        bluetoothAddress = 'iOS-Bluetooth-Address-Placeholder';
+      }
+
+      return bluetoothAddress ?? 'Unknown';
+    } catch (e) {
+      print("Error getting Bluetooth address: $e");
+      return 'Unknown';
+    }
+  }
+
+  // Updated joinClass function to include Bluetooth address
   Future<void> joinClass(String joinCode) async {
     try {
       // Search for the class with the given join code
@@ -114,12 +163,41 @@ class _homeStudentstate extends State<homeStudent> {
 
       if (classSnapshot.docs.isNotEmpty) {
         var classDoc = classSnapshot.docs.first;
+        String userId = FirebaseAuth.instance.currentUser!.uid;
 
-        // Add the student's ID to the 'students' array in the class document
+        // Get device ID
+        final deviceInfoPlugin = DeviceInfoPlugin();
+        String deviceId = '';
+        if (Theme.of(context).platform == TargetPlatform.android) {
+          var androidInfo = await deviceInfoPlugin.androidInfo;
+          deviceId = androidInfo.id; // Unique device ID for Android
+        } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+          var iosInfo = await deviceInfoPlugin.iosInfo;
+          deviceId = iosInfo.identifierForVendor ??
+              'Unknown'; // Unique device ID for iOS
+        }
+
+        // Get Bluetooth address
+        String bluetoothAddress = await _getBluetoothAddress();
+
+        // Save student ID, device ID, and Bluetooth address to Firestore
         await classDoc.reference.update({
-          'students':
-              FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
+          'students': FieldValue.arrayUnion([userId]),
         });
+        try {
+          await FirebaseFirestore.instance
+              .collection('classes')
+              .doc(classDoc.id)
+              .collection('students')
+              .doc(userId)
+              .set({
+            'deviceId': deviceId,
+            'bluetoothAddress': bluetoothAddress,
+          });
+          print("Data saved successfully.");
+        } catch (e) {
+          print("Firestore error: $e");
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Joined class successfully!')),

@@ -1,3 +1,15 @@
+buildscript {
+    ext.kotlin_version = '1.8.0'  // Make sure this version is compatible with your Flutter SDK
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.0'  // Ensure this is updated
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"  // For Kotlin support if needed
+    }
+}
+
 allprojects {
     repositories {
         google()
