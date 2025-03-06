@@ -1,8 +1,12 @@
 import 'package:classcare/screens/student/attendance_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:classcare/screens/student/assignment_list.dart';
 import 'package:classcare/screens/teacher/chat_tab.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'dart:io';
 
 class StudentClassDetails extends StatefulWidget {
   final String classId;
@@ -38,14 +42,82 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
     return FirebaseFirestore.instance.collection('classes').doc(widget.classId).get();
   }
   
-  void _giveAttendance() {
-    // TODO: Implement the attendance functionality
+  void _giveAttendance() async{
+        
+        String userId = FirebaseAuth.instance.currentUser!.uid;
+        final deviceInfoPlugin = DeviceInfoPlugin();
+        String deviceId = '';
+        if (Theme.of(context).platform == TargetPlatform.android) {
+          var androidInfo = await deviceInfoPlugin.androidInfo;
+          deviceId = androidInfo.id; // Unique device ID for Android
+        } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+          var iosInfo = await deviceInfoPlugin.iosInfo;
+          deviceId = iosInfo.identifierForVendor ??
+              'Unknown'; // Unique device ID for iOS
+        }
+
+        String bluetoothAddress = await _getBluetoothAddress();
+         try {
+          await FirebaseFirestore.instance
+              .collection('classes')
+              .doc(widget.classId)
+              .collection('students')
+              .doc(userId)
+              .set({
+            'deviceId': deviceId,
+            'bluetoothAddress': bluetoothAddress,
+          });
+          print("Data saved successfully.");
+        } catch (e) {
+          print("Firestore error: $e");
+        }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Attendance recorded successfully!')),
     );
-    Navigator.push(context, MaterialPageRoute(builder: (context)=>AttendanceScreen(classId: widget.classId, className: widget.className)));
+    Navigator.push(context, MaterialPageRoute(builder: (context)=>AttendanceScreen()));
   }
+  Future<String> _getBluetoothAddress() async {
+    try {
+      await FlutterBluePlus.turnOn(); 
+      
+      // Get the Bluetooth address
+      String? bluetoothAddress;
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        List<BluetoothDevice> devices = await FlutterBluePlus.connectedDevices;
 
+        if (devices.isNotEmpty) {
+          bluetoothAddress = devices.first.remoteId.toString();
+        } else {
+          // If no connected devices, try scanning
+          await FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
+
+          // Wait for scan results
+          await Future.delayed(Duration(seconds: 4));
+
+          // Get scan results and extract devices
+          List<ScanResult> scanResults =
+              await FlutterBluePlus.scanResults.first;
+
+          if (scanResults.isNotEmpty) {
+            bluetoothAddress = scanResults.first.device.remoteId.toString();
+          } else {
+            bluetoothAddress = 'Android-Bluetooth-Unknown';
+          }
+
+          // Stop scanning
+          FlutterBluePlus.stopScan();
+        }
+      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+        // On iOS, getting Bluetooth address directly is challenging
+        bluetoothAddress = 'iOS-Bluetooth-Address-Placeholder';
+      }
+
+      return bluetoothAddress ?? 'Unknown';
+    } catch (e) {
+      print("Error getting Bluetooth address: $e");
+      return 'Unknown';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +125,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
         title: Text(widget.className),
         // No bottom TabBar here, we'll add it separately
       ),
-      body: Column(
+      body: Column(  
         children: [
           // Give Attendance Button
           Padding(

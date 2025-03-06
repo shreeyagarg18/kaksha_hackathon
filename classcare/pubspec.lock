@@ -33,6 +33,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  bluetooth_info:
+    dependency: "direct main"
+    description:
+      name: bluetooth_info
+      sha256: "7e3daf832bc57f3adfc75c1b60702ce300ecd56814c1c598da9c19cf3c91faa5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   bluez:
     dependency: transitive
     description:

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -7,7 +8,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class TakeAttendancePage extends StatefulWidget {
-  const TakeAttendancePage({super.key});
+  TakeAttendancePage({super.key , required this.ClassId});
+  String ClassId;
 
   @override
   _TakeAttendancePageState createState() => _TakeAttendancePageState();
@@ -16,7 +18,7 @@ class TakeAttendancePage extends StatefulWidget {
 class _TakeAttendancePageState extends State<TakeAttendancePage> {
   final flutterReactiveBle = FlutterReactiveBle();
   final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
-
+  Map<String, String> bluetoothMap = {};
   List<DiscoveredDevice> detectedDevices = [];
   bool isScanning = false;
   StreamSubscription? scanSubscription;
@@ -26,6 +28,7 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
   @override
   void initState() {
     super.initState();
+    getBluetoothAddresses();
     _initializeNotifications();
     _checkPermissions();
     _startScanning(); // Start scanning immediately when the page opens
@@ -51,6 +54,28 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
       ].request();
     }
   }
+  void getBluetoothAddresses() {
+  FirebaseFirestore.instance
+      .collection('classes')
+      .doc(widget.ClassId)
+      .collection('students')
+      .snapshots() // Listen to real-time updates
+      .listen((snapshot) {
+    Map<String, String> updatedBluetoothMap = {};
+    for (var doc in snapshot.docs) {
+      String studentId = doc.id;
+      String? bluetoothAddress = doc.get('bluetoothAddress');
+      if (bluetoothAddress != null) {
+        updatedBluetoothMap[studentId] = bluetoothAddress;
+      }
+    }
+    setState(() {
+      bluetoothMap = updatedBluetoothMap; // Update the map with real-time data
+    });
+  }, onError: (e) {
+    print('Error listening to Bluetooth addresses: $e');
+  });
+}
 
   /// Initialize local notifications
   void _initializeNotifications() {
@@ -80,8 +105,10 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
       double distance = _rssiToDistance(device.rssi);
       if (distance <= distanceThreshold) { // 🔥 Filter based on distance
         if (!detectedDevices.any((d) => d.id == device.id)) {
-          setState(() => detectedDevices.add(device));
-          _sendNotification(device.name.isNotEmpty ? device.name : "Unknown Device");
+          if(bluetoothMap.containsValue(device.id)){
+            setState(() => detectedDevices.add(device));
+            _sendNotification(device.name.isNotEmpty ? device.name : "Unknown Device");
+          }
         }
       }
     }, onError: (error) {
@@ -114,7 +141,7 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {  
     return Scaffold(
       appBar: AppBar(
         title: const Text("Take Attendance"),

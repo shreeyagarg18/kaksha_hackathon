@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  bluetooth_info
   cloud_firestore
   firebase_auth
   firebase_core
