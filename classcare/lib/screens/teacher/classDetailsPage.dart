@@ -1,3 +1,4 @@
+import 'package:classcare/screens/teacher/attendance_history.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classcare/screens/teacher/students_list.dart';
@@ -40,7 +41,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
   // Navigate to attendance page
   void _navigateToAttendance() {
     Navigator.push(
-      context, 
+      context,
       MaterialPageRoute(
         builder: (context) => TakeAttendancePage(
           ClassId: widget.classId,
@@ -112,22 +113,51 @@ class _ClassDetailPageState extends State<ClassDetailPage>
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Take Attendance Button
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: ElevatedButton.icon(
-              onPressed: _navigateToAttendance,
-              icon: const Icon(Icons.how_to_reg),
-              label: const Text("Take Attendance"),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
+      drawer: Drawer( // <-- Added Drawer (Sidebar)
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+              ),
+              child: Text(
+                'Class Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
               ),
             ),
-          ),
-          
+            ListTile(
+              leading: Icon(Icons.how_to_reg),
+              title: Text('Take Attendance'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                _navigateToAttendance(); // Navigate to attendance page
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.code),
+              title: Text('Show Room Code'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                showRoomCodePopup(); // Show join code popup
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Attendance History'),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>AttendanceHistory(classId: widget.classId,)));
+                // Handle logout if needed
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
           // TabBar
           TabBar(
             controller: _tabController,
@@ -137,7 +167,6 @@ class _ClassDetailPageState extends State<ClassDetailPage>
               Tab(icon: Icon(Icons.chat), text: "Chat"),
             ],
           ),
-          
           // TabBarView
           Expanded(
             child: TabBarView(

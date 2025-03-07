@@ -216,23 +216,21 @@ class _AssignmentUploadWidgetState extends State<AssignmentUploadWidget> {
                       lastDate: DateTime(2101),
                     );
 
-                    if (pickedDate != null) {
-                      TimeOfDay? pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay.now(),
-                      );
+                    TimeOfDay? pickedTime = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
 
-                      if (pickedTime != null) {
-                        setState(() {
-                          _dueDate = DateTime(
-                            pickedDate.year,
-                            pickedDate.month,
-                            pickedDate.day,
-                            pickedTime.hour,
-                            pickedTime.minute,
-                          );
-                        });
-                      }
+                    if (pickedTime != null) {
+                      setState(() {
+                        _dueDate = DateTime(
+                          pickedDate!.year,
+                          pickedDate.month,
+                          pickedDate.day,
+                          pickedTime.hour,
+                          pickedTime.minute,
+                        );
+                      });
                     }
                   },
                   child: const Text("Select Due Date & Time"),

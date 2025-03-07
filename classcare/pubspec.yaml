@@ -55,9 +55,9 @@ dependencies:
   flutter_reactive_ble: ^5.4.0
   flutter_local_notifications: ^18.0.1
   device_info_plus: ^9.0.2 
-  flutter_bluetooth_serial: ^0.4.0
   flutter_blue_plus: ^1.35.3
   bluetooth_info: ^0.0.2
+  flutter_bluetooth_serial: ^0.4.0
 
 dev_dependencies:
   flutter_test:

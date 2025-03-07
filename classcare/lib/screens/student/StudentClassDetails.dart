@@ -43,8 +43,18 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
   }
   
   void _giveAttendance() async{
-        
         String userId = FirebaseAuth.instance.currentUser!.uid;
+        String name="";
+         DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+        if (doc.exists) {
+          name = doc.get('name'); // Extracting the 'name' field  
+        } else {
+          print("User document does not exist.");
+          return null;
+    }
         final deviceInfoPlugin = DeviceInfoPlugin();
         String deviceId = '';
         if (Theme.of(context).platform == TargetPlatform.android) {
@@ -57,6 +67,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
         }
 
         String bluetoothAddress = await _getBluetoothAddress();
+        print(bluetoothAddress);
          try {
           await FirebaseFirestore.instance
               .collection('classes')
@@ -66,6 +77,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
               .set({
             'deviceId': deviceId,
             'bluetoothAddress': bluetoothAddress,
+            'name':name,
           });
           print("Data saved successfully.");
         } catch (e) {
