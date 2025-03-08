@@ -213,7 +213,27 @@ class _homeStudentstate extends State<homeStudent> {
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: () {
-              FirebaseAuth.instance.signOut();
+              showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Logout'),
+      content: Text('Are you sure you want to log out?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            Navigator.pop(context); // Close the dialog
+            Navigator.pushReplacementNamed(context, '/start'); // Navigate to login screen
+          },
+          child: Text('Logout'),
+        ),
+      ],
+    ),
+  );
             },
           ),
         ],

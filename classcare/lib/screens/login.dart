@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classcare/screens/teacher/homeTeacher.dart';
 import 'package:classcare/screens/student/hometStudent.dart';
 import 'package:classcare/screens/signup.dart';
+import 'package:lottie/lottie.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, required this.post});
@@ -17,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _errorMessage;
-  bool isLoading = false; // State for loading animation
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -28,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     setState(() {
-      isLoading = true; // Start loading animation
+      isLoading = true;
       _errorMessage = null;
     });
 
@@ -79,7 +80,7 @@ class _LoginPageState extends State<LoginPage> {
       });
     } finally {
       setState(() {
-        isLoading = false; // Stop loading animation
+        isLoading = false;
       });
     }
   }
@@ -87,64 +88,77 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade50,
-      bottomNavigationBar: _signupText(context),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 50),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _registeredText(),
-              const SizedBox(height: 50),
-              _emailField(),
-              const SizedBox(height: 20),
-              _passwordField(),
-              const SizedBox(height: 30),
-              if (_errorMessage != null) ...[
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red, fontSize: 14),
-                ),
-                const SizedBox(height: 20),
-              ],
-              ElevatedButton(
-                onPressed:
-                    isLoading ? null : _login, // Disable button while loading
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)),
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
+      backgroundColor: const Color.fromARGB(255, 5, 4, 5), // Background color
+      resizeToAvoidBottomInset:
+          false, // Prevents UI shifting when keyboard opens
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Center(
+              // Used Center to ensure everything stays in place
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 50),
+                    _loginText(),
+                    const SizedBox(height: 50),
+                    _emailField(),
+                    const SizedBox(height: 15),
+                    _passwordField(),
+                    const SizedBox(height: 15),
+
+                    if (_errorMessage != null) ...[
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 118, 211, 214),
+                          fontSize: 14,
                         ),
-                      )
-                    : const Text('Login',
-                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                      ),
+                      const SizedBox(height: 100),
+                    ],
+
+                    // 🔥 LOTTIE ANIMATION 🔥
+                    SizedBox(
+                      height: 200, // Adjust height as needed
+                      child: Lottie.asset(
+                        'assets/animation.json', // Ensure this file is present in assets
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    const SizedBox(height: 50), // Space before login button
+                    _loginButton(),
+
+                    // Sign-up link
+                    const SizedBox(height: 100), // Space for the login button
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+
+          // Keeps the Sign-up link *fixed at the bottom*
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: Center(child: _signupText(context)),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _registeredText() {
+  Widget _loginText() {
     return const Text(
-      'Log In',
+      'LOGIN',
       style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 28,
-        color: Colors.blue,
+        // fontWeight: FontWeight.bold,
+        fontSize: 64,
+        color: Color.fromARGB(255, 101, 170, 181),
       ),
     );
   }
@@ -152,15 +166,32 @@ class _LoginPageState extends State<LoginPage> {
   Widget _emailField() {
     return TextField(
       controller: _emailController,
+      style:
+          const TextStyle(color: Colors.white), // Ensures typed text is white
       decoration: InputDecoration(
         labelText: 'Email',
-        labelStyle: const TextStyle(color: Colors.blue),
-        hintText: 'Enter Email',
+        labelStyle: const TextStyle(color: Color.fromARGB(255, 118, 181, 200)),
+        hintText: 'Enter your email',
+        hintStyle: const TextStyle(color: Colors.grey), // Makes hint visible
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color.fromARGB(255, 24, 20, 20),
         contentPadding:
             const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(0),
+          borderSide:
+              const BorderSide(color: Colors.white, width: 2), // White border
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(0),
+          borderSide: const BorderSide(
+              color: Colors.white, width: 2), // White border when not focused
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(0),
+          borderSide: const BorderSide(
+              color: Colors.white, width: 2), // White border when focused
+        ),
       ),
     );
   }
@@ -169,48 +200,80 @@ class _LoginPageState extends State<LoginPage> {
     return TextField(
       controller: _passwordController,
       obscureText: true,
+      style:
+          const TextStyle(color: Colors.white), // Ensures typed text is white
       decoration: InputDecoration(
         labelText: 'Password',
-        labelStyle: const TextStyle(color: Colors.blue),
-        hintText: 'Enter Password',
+        labelStyle: const TextStyle(color: Color.fromARGB(255, 118, 181, 200)),
+        hintText: 'Enter your password',
+        hintStyle: const TextStyle(color: Colors.grey), // Makes hint visible
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color.fromARGB(255, 20, 18, 18),
         contentPadding:
             const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(0),
+          borderSide:
+              const BorderSide(color: Colors.white, width: 2), // White border
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(0),
+          borderSide: const BorderSide(
+              color: Colors.white, width: 2), // White border when not focused
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(0),
+          borderSide: const BorderSide(
+              color: Colors.white, width: 2), // White border when focused
+        ),
+      ),
+    );
+  }
+
+  Widget _loginButton() {
+    return SizedBox(
+      width: 200,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : _login,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 114, 196, 203),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        ),
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text('Login',
+                style: TextStyle(fontSize: 18, color: Colors.white)),
       ),
     );
   }
 
   Widget _signupText(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 30),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Don't have an account?",
-            style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-                color: Colors.blueGrey),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          "Don't have an account?",
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: Colors.blueGrey),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => SignupPage(post: widget.post)),
+            );
+          },
+          child: const Text(
+            'Sign Up',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => SignupPage(post: widget.post)),
-              );
-            },
-            child: const Text(
-              'Sign Up',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.blueAccent),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

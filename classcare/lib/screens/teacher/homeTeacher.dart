@@ -15,6 +15,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   final TextEditingController _classNameController = TextEditingController();
   final TextEditingController _slotController = TextEditingController();
   late String _teacherName;
+
   @override
   void dispose() {
     _classNameController.dispose();
@@ -60,13 +61,6 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
       // Generate a random join code
       String joinCode = generateJoinCode();
-      // String teacherId = FirebaseAuth.instance.currentUser!.uid;
-      // DocumentSnapshot teacherDoc = await FirebaseFirestore.instance
-      //     .collection('users')
-      //     .doc(teacherId)
-      //     .get();
-
-      // String teacherName = teacherDoc['name'] ?? 'Unknown Teacher';
 
       // List of fixed colors
       List<Color> availableColors = [
@@ -124,9 +118,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               TextField(
                 controller: _slotController,
                 decoration: const InputDecoration(
@@ -187,7 +179,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
               padding: const EdgeInsets.all(20.0),
               child: Card(
                 elevation: 5, // Add elevation for a shadow effect
-                shape: RoundedRectangleBorder(
+                shape: const RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.all(Radius.circular(20)), // Rounded corners
                 ),
@@ -200,12 +192,12 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                     children: [
                       Text(
                         classData['className'],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         "Slot: ${classData['slot']}",
                         style: TextStyle(
@@ -213,15 +205,15 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                           color: Colors.grey[850],
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         "Teacher Name: ${classData['teacherName']}",
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
-                          color: const Color.fromRGBO(48, 48, 48, 1),
+                          color: Color.fromRGBO(48, 48, 48, 1),
                         ),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: () => Navigator.push(
                           context,
@@ -233,12 +225,13 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white, // Button color
+                          backgroundColor: const Color.fromARGB(
+                              255, 247, 245, 245), // Button color
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'View Class',
                           style: TextStyle(color: Colors.black),
                         ),
@@ -257,25 +250,45 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 5, 4, 5),
       appBar: AppBar(
-        title: const Text("Teacher Dashboard"),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text("Menu", style: TextStyle(color: Colors.white)),
-            ),
-            ListTile(
-              title: const Text("Create Class"),
-              onTap: openCreateClassDialog,
-            ),
-          ],
+  title: const Text("Teacher Dashboard"),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.logout),
+      onPressed: () async {
+        showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Logout'),
+      content: Text('Are you sure you want to log out?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel'),
         ),
-      ),
+        TextButton(
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            Navigator.pop(context); // Close the dialog
+            Navigator.pushReplacementNamed(context, '/start'); // Navigate to login screen
+          },
+          child: Text('Logout'),
+        ),
+      ],
+    ),
+  );
+      },
+      tooltip: 'Logout',
+    ),
+  ],
+),
       body: buildClassList(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: openCreateClassDialog,
+        backgroundColor: Colors.blue, // Customize color as needed
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
