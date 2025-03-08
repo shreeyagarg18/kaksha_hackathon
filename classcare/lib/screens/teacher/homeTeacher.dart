@@ -252,37 +252,39 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 5, 4, 5),
       appBar: AppBar(
-  title: const Text("Teacher Dashboard"),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.logout),
-      onPressed: () async {
-        showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Logout'),
-      content: Text('Are you sure you want to log out?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
-            Navigator.pop(context); // Close the dialog
-            Navigator.pushReplacementNamed(context, '/start'); // Navigate to login screen
-          },
-          child: Text('Logout'),
-        ),
-      ],
-    ),
-  );
-      },
-      tooltip: 'Logout',
-    ),
-  ],
-),
+        automaticallyImplyLeading: false, 
+        title: const Text("Teacher Dashboard"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Logout'),
+                  content: Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pop(context); // Close the dialog
+                        Navigator.pushReplacementNamed(
+                            context, '/start'); // Navigate to login screen
+                      },
+                      child: Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            tooltip: 'Logout',
+          ),
+        ],
+      ),
       body: buildClassList(),
       floatingActionButton: FloatingActionButton(
         onPressed: openCreateClassDialog,

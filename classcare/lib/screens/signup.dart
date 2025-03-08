@@ -24,52 +24,70 @@ class _SignupPageState extends State<SignupPage> {
   bool _isLoading = false;
 
   Future<void> _signup() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      if (_passwordController.text != _confirmPasswordController.text) {
-        setState(() {
-          _errorMessage = "Passwords do not match";
-        });
-        return;
-      }
-
+  if (_formKey.currentState?.validate() ?? false) {
+    if (_passwordController.text != _confirmPasswordController.text) {
       setState(() {
-        _isLoading = true;
+        _errorMessage = "Passwords do not match";
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // 🔄 Send verification email
+      await userCredential.user!.sendEmailVerification();
+
+      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        'email': _emailController.text.trim(),
+        'role': widget.post,
+        'name': _nameController.text.trim(),
+        'isVerified': false, // Optional: Track verification status
       });
 
-      try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Verification email sent! Please check your inbox.";
+      });
 
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set({
-          'email': _emailController.text.trim(),
-          'role': widget.post,
-          'name': _nameController.text.trim()
-        });
-
-        if (widget.post == 'Teacher') {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => TeacherDashboard()));
-        } else {
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => homeStudent()));
-        }
-      } on FirebaseAuthException catch (e) {
-        setState(() {
-          _errorMessage = e.message;
-        });
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      // 🔄 Show a dialog prompting the user to verify their email
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Verify Your Email"),
+          content: const Text("A verification email has been sent to your inbox. Please verify to proceed."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage(post: widget.post)),
+                );
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

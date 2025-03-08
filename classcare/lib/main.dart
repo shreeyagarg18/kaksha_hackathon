@@ -17,7 +17,7 @@ void main() async {
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
   );
-
+  
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   // Check user role if logged in

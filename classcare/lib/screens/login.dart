@@ -39,7 +39,17 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      final User? user = userCredential.user;
 
+      // Check if email is verified
+      if (user != null && !user.emailVerified) {
+        setState(() {
+          _errorMessage =
+              "Please verify your email before logging in. Check your inbox.";
+        });
+        await FirebaseAuth.instance.signOut(); // Sign out unverified user
+        return;
+      }
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user?.uid)
@@ -48,12 +58,19 @@ class _LoginPageState extends State<LoginPage> {
         String? role = userDoc.data()?['role'];
         if (role == widget.post) {
           if (role == 'Teacher') {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => TeacherDashboard()));
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => TeacherDashboard()),
+              (Route<dynamic> route) => false, // Removes all previous routes
+            );
           } else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => homeStudent()));
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => homeStudent()),
+              (Route<dynamic> route) => false, // Removes all previous routes
+            );
           }
+
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('Login successful')));
         } else {

@@ -1,3 +1,4 @@
+import 'package:classcare/screens/teacher/classDetailsPage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -54,7 +55,8 @@ class AssignmentList extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
-                  title: Text(data['title']),
+                  
+                  title: Text(data['title'] ,style: TextStyle(color: AppColors.accentBlue,)),
                   subtitle: Text(
                     "Due Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(data['dueDate']))}",
                   ),

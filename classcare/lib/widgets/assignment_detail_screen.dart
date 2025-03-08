@@ -5,13 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'analyze.dart';
 
 class AssignmentDetailScreen extends StatefulWidget {
-  final String classId;
-  final String assignmentId;
-  final String title;
-  final String description;
-  final String dueDate;
-  final String fileUrl;
-  final String rubricUrl;
+  final String classId,
+      assignmentId,
+      title,
+      description,
+      dueDate,
+      fileUrl,
+      rubricUrl;
 
   const AssignmentDetailScreen({
     super.key,
@@ -30,38 +30,39 @@ class AssignmentDetailScreen extends StatefulWidget {
 
 class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
   final PDFUploadService _pdfService = PDFUploadService();
-  Map<String, bool> _isAnalyzingMap = {};
+  final Map<String, bool> _isAnalyzingMap = {};
   bool _isAnalyzingAll = false;
-  int _currentAnalyzing = 0;
-  int _totalToAnalyze = 0;
+  int _currentAnalyzing = 0, _totalToAnalyze = 0;
+
+  Map<String, String> _formatAnalysisResult(String result) {
+    final parts = result.split('_');
+    return {
+      'marks': parts[0].trim(),
+      'feedback': parts.length > 1 ? parts[1].trim() : 'No feedback provided'
+    };
+  }
 
   Future<void> _analyzeSubmission(
       String studentFileUrl, String submissionId) async {
-    setState(() {
-      _isAnalyzingMap = {submissionId: true};
-    });
+    setState(() => _isAnalyzingMap[submissionId] = true);
 
     try {
-      String assignmentText =
+      final assignmentText =
           await _pdfService.extractTextFromPDF(widget.fileUrl);
-      String rubricText =
-          await _pdfService.extractTextFromPDF(widget.rubricUrl);
-      String studentText = await _pdfService.extractTextFromPDF(studentFileUrl);
-
-      String result = await _pdfService.sendToGeminiAPI(
+      final rubricText = await _pdfService.extractTextFromPDF(widget.rubricUrl);
+      final studentText = await _pdfService.extractTextFromPDF(studentFileUrl);
+      final rawResult = await _pdfService.sendToGeminiAPI(
           assignmentText, rubricText, studentText);
+      final formattedResult = _formatAnalysisResult(rawResult);
 
-      if (mounted) {
-        _showResultDialog(result);
-      }
+      if (mounted) _showResultDialog(formattedResult, submissionId);
     } catch (e) {
-      if (mounted) {
-        _showResultDialog('Error analyzing submission: $e');
-      }
+      if (mounted)
+        _showResultDialog(
+            {'marks': 'Error', 'feedback': 'Error analyzing submission: $e'},
+            submissionId);
     } finally {
-      setState(() {
-        _isAnalyzingMap.remove(submissionId);
-      });
+      if (mounted) setState(() => _isAnalyzingMap.remove(submissionId));
     }
   }
 
@@ -76,37 +77,24 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     });
 
     try {
-      String assignmentText =
+      final assignmentText =
           await _pdfService.extractTextFromPDF(widget.fileUrl);
-      String rubricText =
-          await _pdfService.extractTextFromPDF(widget.rubricUrl);
+      final rubricText = await _pdfService.extractTextFromPDF(widget.rubricUrl);
+      _showSnackBar('Starting analysis of all submissions...',
+          color: Colors.indigo.shade700);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Starting analysis of all submissions...'),
-          backgroundColor: Colors.indigo.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-
-      for (int i = 0; i < submissions.length; i++) {
-        if (!mounted) break;
-
-        var submission = submissions[i];
-        String submissionId = submission.id;
-        String studentId = submission['studentId'] ?? submissionId;
-        String studentFileUrl = submission['fileUrl'];
-
-        setState(() {
-          _currentAnalyzing = i + 1;
-        });
+      for (int i = 0; i < submissions.length && mounted; i++) {
+        final submission = submissions[i];
+        final submissionId = submission.id;
+        final studentFileUrl = submission['fileUrl'];
+        setState(() => _currentAnalyzing = i + 1);
 
         try {
-          String studentText =
+          final studentText =
               await _pdfService.extractTextFromPDF(studentFileUrl);
-
-          String result = await _pdfService.sendToGeminiAPI(
+          final rawResult = await _pdfService.sendToGeminiAPI(
               assignmentText, rubricText, studentText);
+          final formattedResult = _formatAnalysisResult(rawResult);
 
           await FirebaseFirestore.instance
               .collection('classes')
@@ -115,102 +103,401 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
               .doc(widget.assignmentId)
               .collection('submissions')
               .doc(submissionId)
-              .update({'analysisResult': result});
+              .update({
+            'analysisResult': {
+              'marks': formattedResult['marks'],
+              'feedback': formattedResult['feedback']
+            }
+          });
 
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                    'Analyzed ${submission['studentName'] ?? 'Unknown'} (${i + 1}/${submissions.length})'),
-                duration: const Duration(seconds: 1),
-                backgroundColor: Colors.indigo.shade900,
-                behavior: SnackBarBehavior.floating,
-              ),
+            _showSnackBar(
+              'Analyzed ${submission['studentName'] ?? 'Unknown'} (${i + 1}/${submissions.length})',
+              color: Colors.indigo.shade900,
+              duration: const Duration(seconds: 1),
             );
           }
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error analyzing submission ${i + 1}: $e'),
-                backgroundColor: Colors.redAccent.shade700,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            _showSnackBar('Error analyzing submission ${i + 1}: $e',
+                color: Colors.redAccent.shade700);
           }
         }
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                const Text('All submissions analyzed and saved to Firebase'),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showSnackBar('All submissions analyzed and saved to Firebase',
+            color: Colors.green.shade700);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error during analysis: $e'),
-            backgroundColor: Colors.redAccent.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showSnackBar('Error during analysis: $e',
+            color: Colors.redAccent.shade700);
       }
     } finally {
-      setState(() {
-        _isAnalyzingAll = false;
-      });
+      if (mounted) setState(() => _isAnalyzingAll = false);
     }
   }
 
-  void _showResultDialog(String result) {
+  void _showSnackBar(String message,
+      {required Color color, Duration? duration}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: duration ?? const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _showResultDialog(Map<String, String> result, String submissionId) {
+    final marksController = TextEditingController(text: result['marks']);
+    final feedbackController = TextEditingController(text: result['feedback']);
+    bool isUpdating = false;
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
           backgroundColor: const Color(0xFF1A1A2E),
-          title: const Text(
-            "Analysis Result",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-          ),
+          title: const Text("Analysis Result",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           content: SingleChildScrollView(
-            child: Text(
-              result,
-              style: const TextStyle(color: Colors.white70),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.shade900.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.indigo.shade800, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Marks:",
+                          style: TextStyle(
+                              color: Colors.cyanAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: marksController,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 15),
+                        decoration: InputDecoration(
+                          hintText: 'Enter marks',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          border: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.indigo.shade700),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide:
+                                const BorderSide(color: Colors.cyanAccent),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          filled: true,
+                          fillColor: Colors.indigo.shade900.withOpacity(0.3),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text("Feedback:",
+                    style: TextStyle(
+                        color: Colors.cyanAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: feedbackController,
+                  style: const TextStyle(color: Colors.white70, fontSize: 15),
+                  maxLines: 8,
+                  decoration: InputDecoration(
+                    hintText: 'Enter feedback',
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.indigo.shade700),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.cyanAccent),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.indigo.shade900.withOpacity(0.3),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.cyanAccent,
-              ),
-              child: const Text("OK"),
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(foregroundColor: Colors.cyanAccent),
+              child: const Text("Cancel"),
             ),
+            if (isUpdating)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else
+              TextButton(
+                onPressed: () async {
+                  setState(() => isUpdating = true);
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('classes')
+                        .doc(widget.classId)
+                        .collection('assignments')
+                        .doc(widget.assignmentId)
+                        .collection('submissions')
+                        .doc(submissionId)
+                        .update({
+                      'analysisResult': {
+                        'marks': marksController.text,
+                        'feedback': feedbackController.text
+                      }
+                    });
+
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      _showSnackBar('Analysis updated successfully',
+                          color: Colors.green.shade700);
+                    }
+                  } catch (e) {
+                    setState(() => isUpdating = false);
+                    _showSnackBar('Error updating analysis: $e',
+                        color: Colors.redAccent.shade700);
+                  }
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.cyanAccent),
+                child: const Text("Update"),
+              ),
           ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        );
-      },
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    DateTime parsedDate = DateTime.parse(widget.dueDate);
-    String formattedDate =
-        DateFormat('dd MMM yyyy, hh:mm a').format(parsedDate);
+  Future<void> _downloadFile(String url) async {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error opening file.', color: Colors.redAccent.shade700);
+      }
+    }
+  }
 
-    return Theme(
-      data: ThemeData.dark().copyWith(
+  Widget _buildFileDownloadButton(String url, String label) {
+    return InkWell(
+      onTap: () => _downloadFile(url),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: Colors.indigo.shade900))),
+        child: Row(
+          children: [
+            const Icon(Icons.description, color: Colors.cyanAccent),
+            const SizedBox(width: 12),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.cyanAccent, fontWeight: FontWeight.w500)),
+            const Spacer(),
+            const Icon(Icons.download, color: Colors.cyanAccent),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmissionCard(
+      QueryDocumentSnapshot submission, String submissionId, bool hasAnalysis) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+            color: hasAnalysis ? Colors.green.shade900 : Colors.transparent,
+            width: 1),
+      ),
+      elevation: 2,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Colors.indigo.shade800,
+                      child: Text(
+                          (submission['studentName'] ?? 'U')[0].toUpperCase(),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(submission['studentName'] ?? 'Unknown',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time,
+                                  size: 14, color: Colors.grey.shade400),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  submission['submittedAt'] != null
+                                      ? DateFormat('dd MMM, hh:mm a').format(
+                                          (submission['submittedAt']
+                                                  as Timestamp)
+                                              .toDate())
+                                      : 'No submission date',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade400),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (hasAnalysis)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle,
+                                      size: 14, color: Colors.green),
+                                  const SizedBox(width: 4),
+                                  Text('Analysis available',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.green.shade300)),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.file_download,
+                            color: Colors.cyanAccent),
+                        onPressed: () => _downloadFile(submission['fileUrl']),
+                        tooltip: 'Download submission',
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _isAnalyzingMap[submissionId] == true
+                            ? null
+                            : () => _analyzeSubmission(
+                                submission['fileUrl'], submissionId),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: hasAnalysis
+                              ? Colors.green.shade900
+                              : Colors.indigo.shade800,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                        child: Text(_isAnalyzingMap[submissionId] == true
+                            ? 'Analyzing...'
+                            : hasAnalysis
+                                ? 'View Analysis'
+                                : 'Analyze'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (hasAnalysis)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.indigo.shade900.withOpacity(0.3),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(12),
+                ),
+              ),
+              child: TextButton(
+                onPressed: () {
+                  final analysisData = submission['analysisResult'];
+                  if (analysisData is Map<String, dynamic>) {
+                    _showResultDialog({
+                      'marks': analysisData['marks'] ?? 'N/A',
+                      'feedback':
+                          analysisData['feedback'] ?? 'No feedback provided'
+                    }, submissionId);
+                  } else if (analysisData is String) {
+                    _showResultDialog(
+                        _formatAnalysisResult(analysisData), submissionId);
+                  } else {
+                    _showResultDialog({
+                      'marks': 'Error',
+                      'feedback': 'Invalid analysis format'
+                    }, submissionId);
+                  }
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.edit, size: 16),
+                    SizedBox(width: 8),
+                    Text('View & edit analysis',
+                        style: TextStyle(fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  ThemeData _buildTheme() => ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF0F0F1A),
         cardColor: const Color(0xFF1A1A2E),
         appBarTheme: const AppBarTheme(
@@ -225,56 +512,53 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
             backgroundColor: Colors.indigo.shade800,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.cyanAccent,
-          ),
+        textButtonTheme: const TextButtonThemeData(
+          style: ButtonStyle(
+              foregroundColor: MaterialStatePropertyAll(Colors.cyanAccent)),
         ),
-        iconTheme: const IconThemeData(
-          color: Colors.cyanAccent,
-        ),
+        iconTheme: const IconThemeData(color: Colors.cyanAccent),
         progressIndicatorTheme: ProgressIndicatorThemeData(
           color: Colors.cyanAccent,
           linearTrackColor: Colors.indigo.shade900,
         ),
-      ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final formattedDate = DateFormat('dd MMM yyyy, hh:mm a')
+        .format(DateTime.parse(widget.dueDate));
+
+    return Theme(
+      data: _buildTheme(),
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
           actions: [
             IconButton(
               icon: const Icon(Icons.info_outline),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    backgroundColor: const Color(0xFF1A1A2E),
-                    title: const Text(
-                      "Assignment Info",
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: const Color(0xFF1A1A2E),
+                  title: const Text("Assignment Info",
                       style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w600),
+                          color: Colors.white, fontWeight: FontWeight.w600)),
+                  content: Text(widget.description,
+                      style: const TextStyle(color: Colors.white70)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close"),
                     ),
-                    content: Text(
-                      widget.description,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Close"),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -294,22 +578,15 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        Text(widget.title,
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
                         const SizedBox(height: 12),
-                        Text(
-                          widget.description,
-                          style: TextStyle(
-                            color: Colors.grey.shade300,
-                            height: 1.4,
-                          ),
-                        ),
+                        Text(widget.description,
+                            style: TextStyle(
+                                color: Colors.grey.shade300, height: 1.4)),
                         const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -326,13 +603,10 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                               const Icon(Icons.calendar_today,
                                   size: 16, color: Colors.cyanAccent),
                               const SizedBox(width: 8),
-                              Text(
-                                "Due: $formattedDate",
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                              Text("Due: $formattedDate",
+                                  style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ),
@@ -357,32 +631,24 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.cyanAccent,
-                      ),
-                    );
+                        child: CircularProgressIndicator(
+                            color: Colors.cyanAccent));
                   }
 
-                  int submissionCount = snapshot.data!.docs.length;
+                  final submissions = snapshot.data!.docs;
+                  final submissionCount = submissions.length;
 
                   if (submissionCount == 0) {
                     return Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.hourglass_empty,
-                            size: 64,
-                            color: Colors.grey.shade600,
-                          ),
+                          Icon(Icons.hourglass_empty,
+                              size: 64, color: Colors.grey.shade600),
                           const SizedBox(height: 16),
-                          const Text(
-                            "No submissions yet",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          const Text("No submissions yet",
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.grey)),
                         ],
                       ),
                     );
@@ -397,12 +663,11 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF16213E),
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2))
                           ],
                         ),
                         child: Row(
@@ -411,47 +676,33 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  "Submissions",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                  ),
-                                ),
+                                const Text("Submissions",
+                                    style: TextStyle(
+                                        color: Colors.white70, fontSize: 14)),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(
-                                      Icons.assignment_turned_in,
-                                      size: 18,
-                                      color: Colors.cyanAccent,
-                                    ),
+                                    const Icon(Icons.assignment_turned_in,
+                                        size: 18, color: Colors.cyanAccent),
                                     const SizedBox(width: 8),
-                                    Text(
-                                      "$submissionCount",
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    Text("$submissionCount",
+                                        style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
                                   ],
                                 ),
                               ],
                             ),
                             ElevatedButton.icon(
-                              icon: const Icon(
-                                Icons.auto_awesome,
-                                size: 18,
-                              ),
+                              icon: const Icon(Icons.auto_awesome, size: 18),
                               label: _isAnalyzingAll
                                   ? Text(
                                       'Analyzing ${_currentAnalyzing}/${_totalToAnalyze}')
                                   : const Text('Analyze All'),
                               onPressed: _isAnalyzingAll
                                   ? null
-                                  : () => _analyzeAllSubmissions(
-                                      snapshot.data!.docs),
+                                  : () => _analyzeAllSubmissions(submissions),
                               style: ElevatedButton.styleFrom(
                                 elevation: 0,
                                 backgroundColor: _isAnalyzingAll
@@ -472,21 +723,16 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
+                                  Text('Processing submissions...',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade400)),
                                   Text(
-                                    'Processing submissions...',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade400,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${_currentAnalyzing}/${_totalToAnalyze}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.cyanAccent,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                      '${_currentAnalyzing}/${_totalToAnalyze}',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.cyanAccent,
+                                          fontWeight: FontWeight.bold)),
                                 ],
                               ),
                               const SizedBox(height: 6),
@@ -508,226 +754,14 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           itemCount: submissionCount,
                           itemBuilder: (context, index) {
-                            var submission = snapshot.data!.docs[index];
-                            String submissionId = submission.id;
-                            bool hasAnalysis = submission
+                            final submission = submissions[index];
+                            final submissionId = submission.id;
+                            final hasAnalysis = submission
                                 .data()
                                 .toString()
                                 .contains('analysisResult');
-
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: hasAnalysis
-                                      ? Colors.green.shade900
-                                      : Colors.transparent,
-                                  width: 1,
-                                ),
-                              ),
-                              elevation: 2,
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          children: [
-                                            // Leading avatar
-                                            CircleAvatar(
-                                              backgroundColor:
-                                                  Colors.indigo.shade800,
-                                              child: Text(
-                                                (submission['studentName'] ??
-                                                        'U')[0]
-                                                    .toUpperCase(),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            // Student info (expanded to take available space)
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    submission['studentName'] ??
-                                                        'Unknown',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.access_time,
-                                                        size: 14,
-                                                        color: Colors
-                                                            .grey.shade400,
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Flexible(
-                                                        child: Text(
-                                                          submission['submittedAt'] !=
-                                                                  null
-                                                              ? DateFormat(
-                                                                      'dd MMM, hh:mm a')
-                                                                  .format((submission[
-                                                                              'submittedAt']
-                                                                          as Timestamp)
-                                                                      .toDate())
-                                                              : 'No submission date',
-                                                          style: TextStyle(
-                                                            fontSize: 12,
-                                                            color: Colors
-                                                                .grey.shade400,
-                                                          ),
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  if (hasAnalysis)
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              top: 4),
-                                                      child: Row(
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.check_circle,
-                                                            size: 14,
-                                                            color: Colors.green,
-                                                          ),
-                                                          const SizedBox(
-                                                              width: 4),
-                                                          Text(
-                                                            'Analysis available',
-                                                            style: TextStyle(
-                                                              fontSize: 12,
-                                                              color: Colors
-                                                                  .green
-                                                                  .shade300,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        // Action buttons in a separate row to avoid overflow
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 12),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.file_download,
-                                                  color: Colors.cyanAccent,
-                                                ),
-                                                onPressed: () => _downloadFile(
-                                                    submission['fileUrl']),
-                                                tooltip: 'Download submission',
-                                                constraints:
-                                                    const BoxConstraints(),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              ElevatedButton(
-                                                onPressed: _isAnalyzingMap[
-                                                            submissionId] ==
-                                                        true
-                                                    ? null
-                                                    : () => _analyzeSubmission(
-                                                        submission['fileUrl'],
-                                                        submissionId),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: hasAnalysis
-                                                      ? Colors.green.shade900
-                                                      : Colors.indigo.shade800,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 8),
-                                                ),
-                                                child: Text(_isAnalyzingMap[
-                                                            submissionId] ==
-                                                        true
-                                                    ? 'Analyzing...'
-                                                    : hasAnalysis
-                                                        ? 'View Analysis'
-                                                        : 'Analyze'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (hasAnalysis)
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.indigo.shade900
-                                            .withOpacity(0.3),
-                                        borderRadius: const BorderRadius.only(
-                                          bottomLeft: Radius.circular(12),
-                                          bottomRight: Radius.circular(12),
-                                        ),
-                                      ),
-                                      child: TextButton(
-                                        onPressed: () {
-                                          _showResultDialog(
-                                              submission['analysisResult']);
-                                        },
-                                        style: TextButton.styleFrom(
-                                          padding: EdgeInsets.zero,
-                                          minimumSize: Size.zero,
-                                          tapTargetSize:
-                                              MaterialTapTargetSize.shrinkWrap,
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.insights,
-                                              size: 16,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            const Text(
-                                              'View detailed analysis',
-                                              style: TextStyle(fontSize: 14),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
+                            return _buildSubmissionCard(
+                                submission, submissionId, hasAnalysis);
                           },
                         ),
                       ),
@@ -740,55 +774,5 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildFileDownloadButton(String url, String label) {
-    return InkWell(
-      onTap: () => _downloadFile(url),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.indigo.shade900)),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.description,
-              color: Colors.cyanAccent,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.cyanAccent,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const Spacer(),
-            const Icon(
-              Icons.download,
-              color: Colors.cyanAccent,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _downloadFile(String url) async {
-    final Uri uri = Uri.parse(url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Error opening file.'),
-            backgroundColor: Colors.redAccent.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
   }
 }

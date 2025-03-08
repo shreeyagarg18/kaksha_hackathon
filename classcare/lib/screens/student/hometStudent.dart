@@ -106,7 +106,6 @@ class _homeStudentstate extends State<homeStudent> {
   }
 
   // Function for the student to join a class using a join code
-  
 
   // Updated joinClass function to include Bluetooth address
   Future<void> joinClass(String joinCode) async {
@@ -208,32 +207,34 @@ class _homeStudentstate extends State<homeStudent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false, 
         title: Text('Student Dashboard'),
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: () {
               showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Logout'),
-      content: Text('Are you sure you want to log out?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
-            Navigator.pop(context); // Close the dialog
-            Navigator.pushReplacementNamed(context, '/start'); // Navigate to login screen
-          },
-          child: Text('Logout'),
-        ),
-      ],
-    ),
-  );
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Logout'),
+                  content: Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pop(context); // Close the dialog
+                        Navigator.pushReplacementNamed(
+                            context, '/start'); // Navigate to login screen
+                      },
+                      child: Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],

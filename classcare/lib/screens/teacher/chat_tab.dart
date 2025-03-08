@@ -2,6 +2,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+// Using the same AppColors class for consistency
+class AppColors {
+  // Base colors
+  static const Color background = Color(0xFF121212);
+  static const Color surfaceColor = Color(0xFF1E1E1E);
+  static const Color cardColor = Color(0xFF252525);
+  
+  // Subtle accent colors
+  static const Color accentBlue = Color.fromARGB(255, 124, 197, 231);
+  static const Color accentGreen = Color(0xFF8FBCBB);
+  static const Color accentPurple = Color(0xFFB48EAD);
+  static const Color accentYellow = Color(0xFFEBCB8B);
+  static const Color accentRed = Color(0xFFBF616A);
+  
+  // Text colors
+  static const Color primaryText = Colors.white;
+  static const Color secondaryText = Color(0xFFAAAAAA);
+  static const Color tertiaryText = Color(0xFF757575);
+}
+
 class ChatTab extends StatefulWidget {
   final String classId;
   const ChatTab({super.key, required this.classId});
@@ -14,6 +34,7 @@ class _ChatTabState extends State<ChatTab> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ScrollController _scrollController = ScrollController();
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -39,71 +60,146 @@ class _ChatTabState extends State<ChatTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Chat")),
-      body: Column(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
         children: [
+          
+          // Chat messages area
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('classes')
-                  .doc(widget.classId)
-                  .collection('chats')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                var messages = snapshot.data!.docs;
-                return ListView.builder(
-                  reverse: true, // Show latest message at the bottom
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    var message = messages[index];
-                    String currentSenderId = message['senderId'] ?? '';
-                    bool isMe = currentSenderId == _auth.currentUser!.uid;
-
-                    // Get sender name with fallback
-                    String senderName = message['senderName'] ?? 'Unknown';
-
-                    // Check if this is the first message or a different sender than the previous message
-                    bool showSenderName = true;
-                    if (index < messages.length - 1) {
-                      var previousMessage = messages[index + 1];
-                      String previousSenderId =
-                          previousMessage['senderId'] ?? '';
-                      // Only show name if this is a different sender from the previous message
-                      // (Remember the list is in reverse order due to 'reverse: true')
-                      if (currentSenderId == previousSenderId) {
-                        showSenderName = false;
-                      }
-                    }
-
-                    return ChatBubble(
-                      senderName: senderName,
-                      message: message['message'],
-                      isMe: isMe,
-                      showSenderName: showSenderName,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore
+                    .collection('classes')
+                    .doc(widget.classId)
+                    .collection('chats')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.accentBlue,
+                      ),
                     );
-                  },
-                );
-              },
+                  }
+                  var messages = snapshot.data!.docs;
+                  
+                  if (messages.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            color: AppColors.secondaryText.withOpacity(0.5),
+                            size: 48,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            "No messages yet",
+                            style: TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Start the conversation!",
+                            style: TextStyle(
+                              color: AppColors.tertiaryText,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  
+                  return ListView.builder(
+                    controller: _scrollController,
+                    reverse: true, // Show latest message at the bottom
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      var message = messages[index];
+                      String currentSenderId = message['senderId'] ?? '';
+                      bool isMe = currentSenderId == _auth.currentUser!.uid;
+
+                      // Get sender name with fallback
+                      String senderName = message['senderName'] ?? 'Unknown';
+
+                      // Check if this is the first message or a different sender than the previous message
+                      bool showSenderName = true;
+                      if (index < messages.length - 1) {
+                        var previousMessage = messages[index + 1];
+                        String previousSenderId = previousMessage['senderId'] ?? '';
+                        // Only show name if this is a different sender from the previous message
+                        // (Remember the list is in reverse order due to 'reverse: true')
+                        if (currentSenderId == previousSenderId) {
+                          showSenderName = false;
+                        }
+                      }
+
+                      return ChatBubble(
+                        senderName: senderName,
+                        message: message['message'],
+                        isMe: isMe,
+                        showSenderName: showSenderName,
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(8.0),
+          
+          // Message input area
+          Container(
+            margin: EdgeInsets.only(top: 16),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.accentBlue.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _messageController,
-                    decoration: InputDecoration(hintText: "Enter message"),
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      hintStyle: TextStyle(
+                        color: AppColors.tertiaryText,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 4),
+                    ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: sendMessage,
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.send_rounded, size: 20),
+                    color: Colors.white,
+                    onPressed: sendMessage,
+                    tooltip: "Send message",
+                  ),
                 ),
               ],
             ),
@@ -111,6 +207,13 @@ class _ChatTabState extends State<ChatTab> {
         ],
       ),
     );
+  }
+  
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 }
 
@@ -133,29 +236,60 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
-        crossAxisAlignment:
-            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           // Only show the sender name if showSenderName is true
           if (showSenderName)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.only(
+                left: isMe ? 0 : 12,
+                right: isMe ? 12 : 0,
+                top: 8,
+                bottom: 2,
+              ),
               child: Text(
                 senderName,
                 style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.grey[700]),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                  color: isMe ? AppColors.accentBlue : AppColors.accentGreen,
+                ),
               ),
             ),
           Container(
-            margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            padding: EdgeInsets.all(12),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            margin: EdgeInsets.only(
+              bottom: 4,
+              left: isMe ? 40 : 8,
+              right: isMe ? 8 : 40,
+              top: showSenderName ? 2 : 2,
+            ),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
             decoration: BoxDecoration(
-              color: isMe ? Colors.blueAccent : Colors.grey[300],
-              borderRadius: BorderRadius.circular(12),
+              color: isMe 
+                ? AppColors.accentBlue.withOpacity(0.8) 
+                : AppColors.cardColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(isMe ? 16 : 4),
+                bottomRight: Radius.circular(isMe ? 4 : 16),
+              ),
+              border: isMe 
+                ? null 
+                : Border.all(
+                    color: AppColors.surfaceColor,
+                    width: 1,
+                  ),
             ),
             child: Text(
               message,
-              style: TextStyle(color: isMe ? Colors.white : Colors.black),
+              style: TextStyle(
+                color: isMe ? Colors.white : AppColors.primaryText,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

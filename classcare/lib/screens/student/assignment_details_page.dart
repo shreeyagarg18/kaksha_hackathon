@@ -25,6 +25,10 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   bool _isSubmitted = false;
   String? _submittedFileUrl;
   String? _submittedFileName;
+  // Added for analysis results
+  bool _hasAnalysisResult = false;
+  String? _marks;
+  String? _feedback;
 
   @override
   void initState() {
@@ -52,6 +56,23 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
           _submittedFileUrl = submissionSnapshot['fileUrl'];
           _submittedFileName =
               _submittedFileUrl?.split('/').last ?? "Submitted File";
+
+          // Check for analysis results
+          if (submissionSnapshot.data()!.containsKey('analysisResult')) {
+            var analysisResult = submissionSnapshot['analysisResult'];
+            if (analysisResult is Map<String, dynamic>) {
+              _hasAnalysisResult = true;
+              _marks = analysisResult['marks'];
+              _feedback = analysisResult['feedback'];
+            } else if (analysisResult is String) {
+              _hasAnalysisResult = true;
+              // Parse the string format from teacher's screen
+              final parts = analysisResult.split('_');
+              _marks = parts[0].trim();
+              _feedback =
+                  parts.length > 1 ? parts[1].trim() : 'No feedback provided';
+            }
+          }
         });
       }
     } catch (e) {
@@ -201,6 +222,132 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         _isSubmitting = false;
       });
     }
+  }
+
+  // New method to show analysis details
+  void _showAnalysisDetailsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Assignment Analysis'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Marks:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _marks ?? 'Not available',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Feedback:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _feedback ?? 'No feedback provided',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Method to build the analysis result section
+  Widget _buildAnalysisResultSection(double screenWidth, double screenHeight) {
+    if (!_hasAnalysisResult) {
+      return Container();
+    }
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth * 0.04),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.assessment,
+                  color: Theme.of(context).primaryColor,
+                  size: screenWidth * 0.06,
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                Text(
+                  "Assignment Analysis",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.045,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.015),
+            Row(
+              children: [
+                Icon(
+                  Icons.grade,
+                  color: Colors.amber,
+                  size: screenWidth * 0.05,
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                Text(
+                  "Marks: ${_marks ?? 'Not available'}",
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.035,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.01),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _showAnalysisDetailsDialog,
+                icon: Icon(Icons.info_outline),
+                label: Text("View Full Analysis"),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -439,6 +586,12 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                   ),
                 ),
               ),
+
+              // Analysis Results Section (only shown if available)
+              if (_isSubmitted && _hasAnalysisResult) ...[
+                SizedBox(height: screenHeight * 0.02),
+                _buildAnalysisResultSection(screenWidth, screenHeight),
+              ]
             ],
           ),
         ),
