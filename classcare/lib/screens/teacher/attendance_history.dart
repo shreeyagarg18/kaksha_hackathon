@@ -12,20 +12,32 @@ class AttendanceHistory extends StatefulWidget {
 
 class _AttendanceHistory extends State<AttendanceHistory> {
   // Function to fetch attendance data from Firestore
-  Stream<Map<String, dynamic>> fetchAttendanceHistory() {
-    return FirebaseFirestore.instance
+ // Function to fetch attendance data from Firestore
+Stream<Map<String, dynamic>> fetchAttendanceHistory() async* {
+  try {
+    final collectionRef = FirebaseFirestore.instance
         .collection('classes')
         .doc(widget.classId)
-        .collection('attendancehistory')
-        .snapshots()
-        .map((snapshot) {
-      final data = <String, dynamic>{};
-      for (var doc in snapshot.docs) {
-        data[doc.id] = doc.data();
-      }
-      return data;
-    });
+        .collection('attendancehistory');
+
+    // Check if the collection exists
+    final snapshot = await collectionRef.get();
+    if (snapshot.docs.isEmpty) {
+      yield {}; // Return an empty map if no documents are found
+    } else {
+      yield* collectionRef.snapshots().map((snapshot) {
+        final data = <String, dynamic>{};
+        for (var doc in snapshot.docs) {
+          data[doc.id] = doc.data();
+        }
+        return data;
+      });
+    }
+  } catch (e) {
+    yield {}; // Return an empty map if any error occurs
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

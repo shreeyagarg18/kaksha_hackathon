@@ -64,12 +64,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
       // List of fixed colors
       List<Color> availableColors = [
-        Colors.blue.shade100,
-        Colors.green.shade100,
-        Colors.orange.shade100,
-        Colors.cyan.shade100,
-        Colors.teal.shade100,
-        Colors.red.shade100
+        AppColors.accentBlue,
+        AppColors.accentGreen,
+        AppColors.accentPurple,
+        AppColors.accentYellow,
       ];
 
       // Randomly select a color
@@ -195,6 +193,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: Colors.black
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -202,7 +201,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         "Slot: ${classData['slot']}",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[850],
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -210,7 +209,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         "Teacher Name: ${classData['teacherName']}",
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Color.fromRGBO(48, 48, 48, 1),
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -250,13 +249,14 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 5, 4, 5),
+      backgroundColor: const Color.fromARGB(255, 27, 26, 27),
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false, 
-        title: const Text("Teacher Dashboard"),
+        title: const Text("Teacher Dashboard" , style: TextStyle(color: AppColors.accentYellow),),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout , color: AppColors.accentYellow,),
             onPressed: () async {
               showDialog(
                 context: context,
