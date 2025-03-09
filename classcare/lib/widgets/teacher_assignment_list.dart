@@ -56,7 +56,7 @@ class AssignmentList extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
                   
-                  title: Text(data['title'] ,style: TextStyle(color: AppColors.accentBlue,)),
+                  title: Text(data['title'] ,style: TextStyle(color: Colors.blue,)),
                   subtitle: Text(
                     "Due Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(data['dueDate']))}",
                   ),

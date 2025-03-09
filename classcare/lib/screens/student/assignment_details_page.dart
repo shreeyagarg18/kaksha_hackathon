@@ -10,25 +10,28 @@ import 'package:url_launcher/url_launcher.dart';
 class AssignmentDetailPage extends StatefulWidget {
   final QueryDocumentSnapshot assignment;
   final String classId;
-
   const AssignmentDetailPage(
       {super.key, required this.assignment, required this.classId});
-
   @override
   _AssignmentDetailPageState createState() => _AssignmentDetailPageState();
 }
 
 class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
-  bool _isSubmitting = false;
+  bool _isSubmitting = false, _isSubmitted = false, _hasAnalysisResult = false;
   PlatformFile? _pickedFile;
-  String? _filePath;
-  bool _isSubmitted = false;
-  String? _submittedFileUrl;
-  String? _submittedFileName;
-  // Added for analysis results
-  bool _hasAnalysisResult = false;
-  String? _marks;
-  String? _feedback;
+  String? _filePath, _submittedFileUrl, _submittedFileName, _marks, _feedback;
+  final _theme = {
+    'primary': Color.fromARGB(255, 125, 225, 130),
+    'accent': const Color(0xFF03DAC6),
+    'background': const Color(0xFF121212),
+    'surface': const Color(0xFF1E1E1E),
+    'card': const Color(0xFF252525),
+    'error': const Color(0xFFCF6679),
+    'success': const Color(0xFF4CAF50),
+    'warning': const Color(0xFFFFA000),
+    'textPrimary': Colors.white,
+    'textSecondary': Colors.white70,
+  };
 
   @override
   void initState() {
@@ -36,37 +39,30 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
     _checkSubmissionStatus();
   }
 
-  // Check if the assignment has been submitted by the student
   Future<void> _checkSubmissionStatus() async {
     try {
       String studentId = FirebaseAuth.instance.currentUser!.uid;
-
-      var submissionSnapshot = await FirebaseFirestore.instance
-          .collection('classes')
-          .doc(widget.classId)
-          .collection('assignments')
-          .doc(widget.assignment['assignmentId'])
-          .collection('submissions')
+      var submissionDoc = await FirebaseFirestore.instance
+          .collection(
+              'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/submissions')
           .doc(studentId)
           .get();
 
-      if (submissionSnapshot.exists) {
+      if (submissionDoc.exists) {
         setState(() {
           _isSubmitted = true;
-          _submittedFileUrl = submissionSnapshot['fileUrl'];
+          _submittedFileUrl = submissionDoc['fileUrl'];
           _submittedFileName =
               _submittedFileUrl?.split('/').last ?? "Submitted File";
 
-          // Check for analysis results
-          if (submissionSnapshot.data()!.containsKey('analysisResult')) {
-            var analysisResult = submissionSnapshot['analysisResult'];
+          if (submissionDoc.data()!.containsKey('analysisResult')) {
+            var analysisResult = submissionDoc['analysisResult'];
+            _hasAnalysisResult = true;
+
             if (analysisResult is Map<String, dynamic>) {
-              _hasAnalysisResult = true;
               _marks = analysisResult['marks'];
               _feedback = analysisResult['feedback'];
             } else if (analysisResult is String) {
-              _hasAnalysisResult = true;
-              // Parse the string format from teacher's screen
               final parts = analysisResult.split('_');
               _marks = parts[0].trim();
               _feedback =
@@ -76,18 +72,20 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         });
       }
     } catch (e) {
-      print("Error checking submission status: $e");
+      print("Error: $e");
     }
   }
 
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
   Future<void> downloadFile(String fileUrl) async {
-    final Uri uri = Uri.parse(fileUrl);
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(Uri.parse(fileUrl), mode: LaunchMode.externalApplication);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Download failed: $e")),
-      );
+      _showSnackBar("Download failed: $e", _theme['error']!);
     }
   }
 
@@ -97,73 +95,51 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         type: FileType.custom,
         allowedExtensions: ['pdf'],
       );
-
       if (result != null && result.files.isNotEmpty) {
         setState(() {
           _pickedFile = result.files.first;
           _filePath = result.files.first.path;
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No file selected')),
-        );
+        _showSnackBar('No file selected', _theme['card']!);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking file: $e')),
-      );
+      _showSnackBar('Error picking file: $e', _theme['error']!);
     }
   }
 
   void addToGoogleCalendar() async {
     var data = widget.assignment.data() as Map<String, dynamic>;
-    String title = Uri.encodeComponent(data['title'] ?? "No Title");
-    String description =
-        Uri.encodeComponent(data['description'] ?? "No Description");
     String dueDate = data['dueDate'] ?? "";
-
     if (dueDate.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Due date not available")),
-      );
+      _showSnackBar("Due date not available", _theme['warning']!);
       return;
     }
 
-    // Convert dueDate to ISO format
+    String title = Uri.encodeComponent(data['title'] ?? "No Title");
+    String description =
+        Uri.encodeComponent(data['description'] ?? "No Description");
     DateTime dueDateTime = DateTime.parse(dueDate);
-    String formattedDueDate =
+    String formattedDate =
         "${dueDateTime.toUtc().toIso8601String().replaceAll("-", "").replaceAll(":", "").split(".")[0]}Z";
-
     String calendarUrl =
-        "https://www.google.com/calendar/render?action=TEMPLATE"
-        "&text=$title"
-        "&details=$description"
-        "&dates=$formattedDueDate/$formattedDueDate";
-
-    Uri uri = Uri.parse(calendarUrl);
+        "https://www.google.com/calendar/render?action=TEMPLATE&text=$title&details=$description&dates=$formattedDate/$formattedDate";
 
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(Uri.parse(calendarUrl),
+          mode: LaunchMode.externalApplication);
     } catch (e) {
-      print("Error launching URL: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open Google Calendar")),
-      );
+      _showSnackBar("Could not open Calendar", _theme['error']!);
     }
   }
 
   Future<void> uploadSubmission() async {
     if (_pickedFile == null || _filePath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a file before submitting')),
-      );
+      _showSnackBar('Please select a file', _theme['warning']!);
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
-
+    setState(() => _isSubmitting = true);
     try {
       String studentId = FirebaseAuth.instance.currentUser!.uid;
       String studentName = await FirebaseFirestore.instance
@@ -172,28 +148,19 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
           .get()
           .then((doc) => doc['name'] ?? 'No name found');
 
-      String fileExtension = _pickedFile!.extension ?? 'pdf';
-
       Reference storageRef = FirebaseStorage.instance.ref().child(
           'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/student/${_pickedFile!.name}');
 
-      UploadTask uploadTask;
-
-      if (kIsWeb) {
-        uploadTask = storageRef.putData(_pickedFile!.bytes!);
-      } else {
-        uploadTask = storageRef.putFile(File(_filePath!));
-      }
+      UploadTask uploadTask = kIsWeb
+          ? storageRef.putData(_pickedFile!.bytes!)
+          : storageRef.putFile(File(_filePath!));
 
       TaskSnapshot snapshot = await uploadTask;
       String fileUrl = await snapshot.ref.getDownloadURL();
 
       await FirebaseFirestore.instance
-          .collection('classes')
-          .doc(widget.classId)
-          .collection('assignments')
-          .doc(widget.assignment['assignmentId'])
-          .collection('submissions')
+          .collection(
+              'classes/${widget.classId}/assignments/${widget.assignment['assignmentId']}/submissions')
           .doc(studentId)
           .set({
         'studentName': studentName,
@@ -206,69 +173,65 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         _isSubmitted = true;
         _submittedFileUrl = fileUrl;
         _submittedFileName = _pickedFile!.name;
-        _pickedFile = null;
-        _filePath = null;
+        _pickedFile = _filePath = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assignment submitted successfully!')),
-      );
+      _showSnackBar('Assignment submitted successfully!', _theme['success']!);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit assignment: $e')),
-      );
+      _showSnackBar('Submission failed: $e', _theme['error']!);
     } finally {
-      setState(() {
-        _isSubmitting = false;
-      });
+      setState(() => _isSubmitting = false);
     }
   }
 
-  // New method to show analysis details
   void _showAnalysisDetailsDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Assignment Analysis'),
+        backgroundColor: _theme['surface'],
+        title: Text('Assignment Analysis',
+            style: TextStyle(color: _theme['textPrimary'])),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Marks:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text('Marks:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _theme['textPrimary'])),
               SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: _theme['primary']!.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
+                  border:
+                      Border.all(color: _theme['primary']!.withOpacity(0.5)),
                 ),
-                child: Text(
-                  _marks ?? 'Not available',
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: Text(_marks ?? 'Not available',
+                    style:
+                        TextStyle(fontSize: 16, color: _theme['textPrimary'])),
               ),
               SizedBox(height: 16),
-              Text(
-                'Feedback:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text('Feedback:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _theme['textPrimary'])),
               SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: _theme['primary']!.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
+                  border:
+                      Border.all(color: _theme['primary']!.withOpacity(0.5)),
                 ),
-                child: Text(
-                  _feedback ?? 'No feedback provided',
-                  style: TextStyle(fontSize: 14),
-                ),
+                child: Text(_feedback ?? 'No feedback provided',
+                    style:
+                        TextStyle(fontSize: 14, color: _theme['textPrimary'])),
               ),
             ],
           ),
@@ -276,71 +239,76 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Close'),
+            child: Text('Close', style: TextStyle(color: _theme['accent'])),
           ),
         ],
       ),
     );
   }
 
-  // Method to build the analysis result section
-  Widget _buildAnalysisResultSection(double screenWidth, double screenHeight) {
-    if (!_hasAnalysisResult) {
-      return Container();
-    }
-
-    return Card(
-      elevation: 2,
+  Widget _buildAnalysisResultSection(double w, double h) {
+    if (!_hasAnalysisResult) return Container();
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: h * 0.01),
+      decoration: BoxDecoration(
+        color: _theme['card'],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))
+        ],
+      ),
       child: Padding(
-        padding: EdgeInsets.all(screenWidth * 0.04),
+        padding: EdgeInsets.all(w * 0.04),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.assessment,
-                  color: Theme.of(context).primaryColor,
-                  size: screenWidth * 0.06,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                Text(
-                  "Assignment Analysis",
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.045,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
+                Icon(Icons.analytics_outlined,
+                    color: _theme['accent'], size: w * 0.06),
+                SizedBox(width: w * 0.02),
+                Text("Assignment Analysis",
+                    style: TextStyle(
+                        fontSize: w * 0.045,
+                        fontWeight: FontWeight.bold,
+                        color: _theme['textPrimary'])),
               ],
             ),
-            SizedBox(height: screenHeight * 0.015),
+            Divider(
+                color: _theme['accent']!.withOpacity(0.3),
+                thickness: 1,
+                height: h * 0.03),
             Row(
               children: [
-                Icon(
-                  Icons.grade,
-                  color: Colors.amber,
-                  size: screenWidth * 0.05,
-                ),
-                SizedBox(width: screenWidth * 0.02),
-                Text(
-                  "Marks: ${_marks ?? 'Not available'}",
-                  style: TextStyle(
-                    fontSize: screenWidth * 0.035,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Icon(Icons.grade_outlined, color: Colors.amber, size: w * 0.05),
+                SizedBox(width: w * 0.02),
+                Text("Marks: ${_marks ?? 'Not available'}",
+                    style: TextStyle(
+                        fontSize: w * 0.035,
+                        fontWeight: FontWeight.w500,
+                        color: _theme['textPrimary'])),
               ],
             ),
-            SizedBox(height: screenHeight * 0.01),
+            SizedBox(height: h * 0.01),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
+              child: TextButton(
                 onPressed: _showAnalysisDetailsDialog,
-                icon: Icon(Icons.info_outline),
-                label: Text("View Full Analysis"),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.info_outline, color: _theme['accent']),
+                    SizedBox(width: 8),
+                    Text("View Full Analysis",
+                        style: TextStyle(color: _theme['accent'])),
+                  ],
+                ),
                 style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).primaryColor,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: _theme['accent']!),
+                  ),
                 ),
               ),
             ),
@@ -352,247 +320,412 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    double w = MediaQuery.of(context).size.width;
+    double h = MediaQuery.of(context).size.height;
     var data = widget.assignment.data() as Map<String, dynamic>;
     String title = data['title'] ?? "No Title";
     String description = data['description'] ?? "No Description";
     String dueDate = data['dueDate'] ?? "No Due Date";
     String? fileUrl = data['fileUrl'];
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(
-          title,
-          style: TextStyle(fontSize: screenWidth * 0.05),
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: _theme['background'],
+        primaryColor: _theme['primary'],
+        colorScheme: ColorScheme.dark(
+          primary: _theme['primary']!,
+          secondary: _theme['accent']!,
+          surface: _theme['surface']!,
+          background: _theme['background']!,
+          error: _theme['error']!,
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        cardColor: _theme['card'],
+        dividerColor: Colors.white24,
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: _theme['textPrimary']),
+          bodyMedium: TextStyle(color: _theme['textSecondary']),
+        ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.all(screenWidth * 0.04), // Responsive padding
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Due Date Banner
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: screenHeight * 0.015,
-                  horizontal: screenWidth * 0.04,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(screenWidth * 0.02),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: screenWidth * 0.05),
-                    SizedBox(width: screenWidth * 0.02),
-                    Text(
-                      "Due: $dueDate",
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.035,
-                        fontWeight: FontWeight.w500,
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: Text(title,
+              style: TextStyle(
+                  fontSize: w * 0.045,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5)),
+          backgroundColor: _theme['surface'],
+          foregroundColor: _theme['textPrimary'],
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [_theme['background']!, Color(0xFF1A1A1A)],
+            ),
+          ),
+          child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
+            child: Padding(
+              padding: EdgeInsets.all(w * 0.04),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        vertical: h * 0.015, horizontal: w * 0.04),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _theme['primary']!.withOpacity(0.6),
+                          _theme['primary']!.withOpacity(0.2)
+                        ],
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                            color: _theme['primary']!.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 2))
+                      ],
                     ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: screenHeight * 0.02), // Responsive spacing
-
-              // Description Card
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: EdgeInsets.all(screenWidth * 0.03),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Description",
-                              style: TextStyle(
-                                fontSize: screenWidth * 0.04,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: screenHeight * 0.01),
-                            Text(
-                              description,
-                              style: TextStyle(fontSize: screenWidth * 0.035),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: addToGoogleCalendar,
-                        icon: Icon(
-                          Icons.calendar_today,
-                          size: screenWidth * 0.05,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          "Add to Calendar",
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.035,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: screenHeight * 0.02),
-
-              // File Download Section
-              if (fileUrl != null)
-                Card(
-                  elevation: 2,
-                  child: ListTile(
-                    leading: Icon(Icons.assignment, size: screenWidth * 0.06),
-                    title: Text("Assignment File",
-                        style: TextStyle(fontSize: screenWidth * 0.04)),
-                    subtitle: Text("Click to download",
-                        style: TextStyle(fontSize: screenWidth * 0.03)),
-                    trailing: IconButton(
-                      icon: Icon(Icons.download, size: screenWidth * 0.05),
-                      onPressed: () => downloadFile(fileUrl),
-                    ),
-                  ),
-                ),
-
-              SizedBox(height: screenHeight * 0.02),
-
-              // Submission Status Section
-              Card(
-                elevation: 2,
-                child: Padding(
-                  padding: EdgeInsets.all(screenWidth * 0.04),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _isSubmitted ? Icons.check_circle : Icons.pending,
-                            color: _isSubmitted ? Colors.green : Colors.orange,
-                            size: screenWidth * 0.06,
-                          ),
-                          SizedBox(width: screenWidth * 0.02),
-                          Text(
-                            _isSubmitted ? "Submitted" : "Pending Submission",
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined,
+                            size: w * 0.05, color: _theme['textPrimary']),
+                        SizedBox(width: w * 0.02),
+                        Text("Due: $dueDate",
                             style: TextStyle(
-                              fontSize: screenWidth * 0.045,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  _isSubmitted ? Colors.green : Colors.orange,
-                            ),
+                                fontSize: w * 0.035,
+                                fontWeight: FontWeight.w500,
+                                color: _theme['textPrimary'],
+                                letterSpacing: 0.3)),
+                        Spacer(),
+                        IconButton(
+                          icon: Icon(Icons.add_alert_outlined,
+                              color: _theme['textPrimary']),
+                          onPressed: addToGoogleCalendar,
+                          tooltip: 'Add to Calendar',
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: h * 0.02),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _theme['card'],
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10,
+                            offset: Offset(0, 4))
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(w * 0.04),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.description_outlined,
+                                  color: _theme['accent'], size: w * 0.06),
+                              SizedBox(width: w * 0.02),
+                              Text("Assignment Details",
+                                  style: TextStyle(
+                                      fontSize: w * 0.04,
+                                      fontWeight: FontWeight.bold,
+                                      color: _theme['textPrimary'])),
+                            ],
+                          ),
+                          Divider(
+                              color: _theme['accent']!.withOpacity(0.3),
+                              thickness: 1,
+                              height: h * 0.03),
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: h * 0.01),
+                            child: Text(description,
+                                style: TextStyle(
+                                    fontSize: w * 0.035,
+                                    color: _theme['textSecondary'],
+                                    height: 1.5)),
                           ),
                         ],
                       ),
-                      SizedBox(height: screenHeight * 0.02),
-                      if (!_isSubmitted) ...[
-                        // File Selection Area
-                        Container(
-                          padding: EdgeInsets.all(screenWidth * 0.04),
+                    ),
+                  ),
+                  SizedBox(height: h * 0.02),
+                  if (fileUrl != null)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _theme['card'],
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              offset: Offset(0, 4))
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: w * 0.04, vertical: h * 0.01),
+                        leading: Container(
+                          padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius:
-                                BorderRadius.circular(screenWidth * 0.02),
+                            color: _theme['primary']!.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Column(
+                          child: Icon(Icons.assignment_outlined,
+                              size: w * 0.06, color: _theme['primary']),
+                        ),
+                        title: Text("Assignment File",
+                            style: TextStyle(
+                                fontSize: w * 0.04,
+                                color: _theme['textPrimary'])),
+                        subtitle: Text("Click to download",
+                            style: TextStyle(
+                                fontSize: w * 0.03,
+                                color: _theme['textSecondary'])),
+                        trailing: ElevatedButton.icon(
+                          icon: Icon(Icons.download_outlined, size: w * 0.053),
+                          label: Text(""),
+                          onPressed: () => downloadFile(fileUrl),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 56, 55, 55),
+                          ),
+                        ),
+                      ),
+                    ),
+                  SizedBox(height: h * 0.02),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _theme['card'],
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10,
+                            offset: Offset(0, 4))
+                      ],
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(w * 0.04),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _pickedFile?.name ?? "No file selected",
-                                      style: TextStyle(
-                                          color: Colors.grey.shade700,
-                                          fontSize: screenWidth * 0.03),
-                                    ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: pickFile,
-                                    icon: Icon(Icons.attach_file,
-                                        size: screenWidth * 0.05,
-                                        color: Colors.white),
-                                    label: Text("Choose File",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: screenWidth * 0.03)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                ],
+                              Icon(
+                                _isSubmitted
+                                    ? Icons.check_circle_outline
+                                    : Icons.pending_outlined,
+                                color: _isSubmitted
+                                    ? _theme['success']
+                                    : _theme['warning'],
+                                size: w * 0.06,
+                              ),
+                              SizedBox(width: w * 0.02),
+                              Text(
+                                _isSubmitted
+                                    ? "Submitted"
+                                    : "Pending Submission",
+                                style: TextStyle(
+                                  fontSize: w * 0.045,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isSubmitted
+                                      ? _theme['success']
+                                      : _theme['warning'],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-
-                        SizedBox(height: screenHeight * 0.02),
-
-                        // Submit Button
-                        FractionallySizedBox(
-                          widthFactor: 1, // Makes it full width
-                          child: ElevatedButton(
-                            onPressed: _isSubmitting ? null : uploadSubmission,
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: screenHeight * 0.02),
+                          Divider(
+                              color: (_isSubmitted
+                                      ? _theme['success']
+                                      : _theme['warning'])!
+                                  .withOpacity(0.3),
+                              thickness: 1,
+                              height: h * 0.03),
+                          if (!_isSubmitted) ...[
+                            Container(
+                              padding: EdgeInsets.all(w * 0.04),
+                              decoration: BoxDecoration(
+                                color: _theme['surface'],
+                                borderRadius: BorderRadius.circular(w * 0.02),
+                                border: Border.all(
+                                  color: _pickedFile != null
+                                      ? _theme['accent']!.withOpacity(0.5)
+                                      : Colors.grey.shade700,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Select Assignment File (PDF)",
+                                      style: TextStyle(
+                                          fontSize: w * 0.035,
+                                          color: _theme['textSecondary'])),
+                                  SizedBox(height: h * 0.01),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _pickedFile?.name ??
+                                              "No file selected",
+                                          style: TextStyle(
+                                            color: _pickedFile != null
+                                                ? _theme['textPrimary']
+                                                : Colors.grey.shade500,
+                                            fontSize: w * 0.03,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      SizedBox(width: w * 0.02),
+                                      OutlinedButton.icon(
+                                        onPressed: pickFile,
+                                        icon: Icon(Icons.attach_file_outlined,
+                                            size: w * 0.04),
+                                        label: Text("Browse",
+                                            style:
+                                                TextStyle(fontSize: w * 0.03)),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: _theme['accent'],
+                                          side: BorderSide(
+                                              color: _theme['accent']!),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: _isSubmitting
-                                ? SizedBox(
-                                    height: screenWidth * 0.06,
-                                    width: screenWidth * 0.06,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
-                                  )
-                                : Text("Submit Assignment",
-                                    style: TextStyle(
-                                        fontSize: screenWidth * 0.045)),
-                          ),
-                        ),
-                      ] else ...[
-                        // Submitted File Section
-                        ListTile(
-                          leading: Icon(Icons.insert_drive_file,
-                              size: screenWidth * 0.06),
-                          title: Text(_submittedFileName ?? "Submitted File",
-                              style: TextStyle(fontSize: screenWidth * 0.03)),
-                          trailing: IconButton(
-                            icon:
-                                Icon(Icons.download, size: screenWidth * 0.05),
-                            onPressed: _submittedFileUrl != null
-                                ? () => downloadFile(_submittedFileUrl!)
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ],
+                            SizedBox(height: h * 0.02),
+                            SizedBox(
+                              width: double.infinity,
+                              height: h * 0.06,
+                              child: ElevatedButton(
+                                onPressed:
+                                    _isSubmitting ? null : uploadSubmission,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _theme['primary'],
+                                  foregroundColor: Colors.white,
+                                  disabledBackgroundColor:
+                                      _theme['primary']!.withOpacity(0.5),
+                                  elevation: 4,
+                                  shadowColor:
+                                      _theme['primary']!.withOpacity(0.5),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30)),
+                                ),
+                                child: _isSubmitting
+                                    ? SizedBox(
+                                        height: w * 0.05,
+                                        width: w * 0.05,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.upload_file_outlined,
+                                              size: w * 0.05),
+                                          SizedBox(width: w * 0.02),
+                                          Text("Submit Assignment",
+                                              style: TextStyle(
+                                                  color: const Color.fromARGB(
+                                                      31, 4, 4, 4),
+                                                  fontSize: w * 0.05,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.5)),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ] else ...[
+                            Container(
+                              padding: EdgeInsets.all(w * 0.03),
+                              decoration: BoxDecoration(
+                                color: _theme['surface'],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                    color: _theme['primary']!.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          _theme['success']!.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                        Icons.insert_drive_file_outlined,
+                                        size: w * 0.06,
+                                        color: _theme['success']),
+                                  ),
+                                  SizedBox(width: w * 0.03),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                            _submittedFileName ??
+                                                "Submitted File",
+                                            style: TextStyle(
+                                                fontSize: w * 0.035,
+                                                color: _theme['textPrimary']),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis),
+                                        SizedBox(height: 4),
+                                        Text("Successfully submitted",
+                                            style: TextStyle(
+                                                fontSize: w * 0.03,
+                                                color: _theme['success'])),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.download_outlined,
+                                        size: w * 0.05,
+                                        color: _theme['accent']),
+                                    onPressed: _submittedFileUrl != null
+                                        ? () => downloadFile(_submittedFileUrl!)
+                                        : null,
+                                    tooltip: 'Download your submission',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  if (_isSubmitted && _hasAnalysisResult) ...[
+                    SizedBox(height: h * 0.02),
+                    _buildAnalysisResultSection(w, h),
+                  ]
+                ],
               ),
-
-              // Analysis Results Section (only shown if available)
-              if (_isSubmitted && _hasAnalysisResult) ...[
-                SizedBox(height: screenHeight * 0.02),
-                _buildAnalysisResultSection(screenWidth, screenHeight),
-              ]
-            ],
+            ),
           ),
         ),
       ),

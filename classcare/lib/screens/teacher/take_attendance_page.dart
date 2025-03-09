@@ -8,6 +8,26 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+// Adding AppColors class to match the StudentClassDetails styling
+class AppColors {
+  // Base colors
+  static const Color background = Color(0xFF121212);
+  static const Color surfaceColor = Color(0xFF1E1E1E);
+  static const Color cardColor = Color(0xFF252525);
+
+  // Subtle accent colors
+  static const Color accentBlue = Color(0xFF81A1C1);
+  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
+  static const Color accentPurple = Color(0xFFB48EAD);
+  static const Color accentYellow = Color(0xFFEBCB8B);
+  static const Color accentRed = Color(0xFFBF616A);
+
+  // Text colors
+  static const Color primaryText = Colors.white;
+  static const Color secondaryText = Color(0xFFAAAAAA);
+  static const Color tertiaryText = Color(0xFF757575);
+}
+
 class TakeAttendancePage extends StatefulWidget {
   TakeAttendancePage({super.key, required this.ClassId});
   final String ClassId;
@@ -21,8 +41,7 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
   final FlutterLocalNotificationsPlugin localNotifications =
       FlutterLocalNotificationsPlugin();
   Map<String, Map<String, String>> bluetoothMap = {};
-  List<Map<String, dynamic>> detectedDevices =
-      []; // This stays as Map<String, dynamic>
+  List<Map<String, dynamic>> detectedDevices = [];
   bool isScanning = false;
   StreamSubscription<DiscoveredDevice>? scanSubscription;
   StreamSubscription<BluetoothDiscoveryResult>? classicScanSubscription;
@@ -70,13 +89,16 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
         String studentId = doc.id;
         String bluetoothAddress = doc.get('bluetoothAddress');
         String name = doc.get('name'); // Get the name field
+        print("hiii");
         if (bluetoothAddress != null) {
           updatedBluetoothMap[studentId] = {
             'name': name,
             'bluetoothAddress': bluetoothAddress,
           };
         }
+        print(bluetoothAddress);
       }
+      print("gg");
       setState(() {
         bluetoothMap =
             updatedBluetoothMap; // Update the map with real-time data
@@ -103,98 +125,100 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
   }
 
   /// Start scanning for BLE devices with distance filtering
-  void _startScanning() {
-    setState(() {
-      detectedDevices.clear();
-      isScanning = true;
-    });
+  /// Start scanning for BLE devices with distance filtering
+void _startScanning() {
+  // Clear previous scan results and reset scanning state
+  _stopScanning();  // Stop any ongoing scans
+  setState(() {
+    detectedDevices.clear();  // Clear cached devices
+    isScanning = true;
+  });
 
-    // BLE scanning using flutter_reactive_ble
-    scanSubscription = flutterReactiveBle.scanForDevices(
-      withServices: [],
-      scanMode: ScanMode.balanced,
-    ).listen((device) {
-      double distance = _rssiToDistance(device.rssi);
-      if (distance <= distanceThreshold) {
-        // Check if the Bluetooth address is in bluetoothMap
-        if (bluetoothMap.values
-            .any((value) => value['bluetoothAddress'] == device.id)) {
-          String? studentName;
-          String? studentId;
-          bluetoothMap.forEach((key, value) {
-            if (value['bluetoothAddress'] == device.id) {
-              studentName = value['name']; // Get the name from the map
-              studentId = key;
-            }
-          });
-          if (!detectedDevices.any((d) => d['id'] == device.id)) {
-            setState(() {
-              detectedDevices.add({
-                'name': studentName ?? "Unknown BLE Device",
-                'id': device.id,
-                'rssi': device.rssi,
-                'distance': distance,
-                'type': 'BLE',
-              });
-            });
-            _sendNotification(studentName ?? "Unknown BLE Device");
-            if (studentId != null && studentName != null) {
-              saveAttendance(studentId!, studentName!); // Save to Firestore
-            }
-          }
-        }
-      }
-    }, onError: (error) {
-      if (kDebugMode) {
-        print("Error scanning: $error");
-      }
-      setState(() => isScanning = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error scanning: $error")),
-      );
-    });
-
-    // Classic Bluetooth scanning
-    classicScanSubscription =
-        FlutterBluetoothSerial.instance.startDiscovery().listen((result) {
-      // Check if the Bluetooth address is in bluetoothMap
+  // BLE scanning using flutter_reactive_ble
+  scanSubscription = flutterReactiveBle.scanForDevices(
+    withServices: [],
+    scanMode: ScanMode.balanced,
+  ).listen((device) {
+    double distance = _rssiToDistance(device.rssi);
+    if (distance <= distanceThreshold) {
       if (bluetoothMap.values
-          .any((value) => value['bluetoothAddress'] == result.device.address)) {
+          .any((value) => value['bluetoothAddress'] == device.id)) {
         String? studentName;
         String? studentId;
         bluetoothMap.forEach((key, value) {
-          if (value['bluetoothAddress'] == result.device.address) {
-            studentName = value['name']; // Get the name from the map
+          if (value['bluetoothAddress'] == device.id) {
+            studentName = value['name'];
             studentId = key;
           }
         });
-        if (!detectedDevices.any((d) => d['id'] == result.device.address)) {
+        if (!detectedDevices.any((d) => d['id'] == device.id)) {
           setState(() {
             detectedDevices.add({
-              'name': studentName ?? "Unknown Classic Device",
-              'id': result.device.address,
-              'rssi': result.rssi ?? -80, // Provide a default value if null
-              'distance':
-                  result.rssi != null ? _rssiToDistance(result.rssi!) : null,
-              'type': 'Classic',
+              'name': studentName ?? "Unknown BLE Device",
+              'id': device.id,
+              'rssi': device.rssi,
+              'distance': distance,
+              'type': 'BLE',
             });
           });
+          _sendNotification(studentName ?? "Unknown BLE Device");
           if (studentId != null && studentName != null) {
-            saveAttendance(studentId!, studentName!); // Save to Firestore
+            saveAttendance(studentId!, studentName!);
           }
-          // _sendNotification(studentName ?? "Unknown Classic Device");
         }
       }
-    });
-  }
+    }
+  }, onError: (error) {
+    setState(() => isScanning = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error scanning: $error")),
+    );
+  });
+
+  // Classic Bluetooth scanning
+  classicScanSubscription =
+      FlutterBluetoothSerial.instance.startDiscovery().listen((result) {
+    if (bluetoothMap.values
+        .any((value) => value['bluetoothAddress'] == result.device.address)) {
+      String? studentName;
+      String? studentId;
+      bluetoothMap.forEach((key, value) {
+        if (value['bluetoothAddress'] == result.device.address) {
+          studentName = value['name'];
+          studentId = key;
+        }
+      });
+      if (!detectedDevices.any((d) => d['id'] == result.device.address)) {
+        setState(() {
+          detectedDevices.add({
+            'name': studentName ?? "Unknown Classic Device",
+            'id': result.device.address,
+            'rssi': result.rssi ?? -80,
+            'distance':
+                result.rssi != null ? _rssiToDistance(result.rssi!) : null,
+            'type': 'Classic',
+          });
+        });
+        if (studentId != null && studentName != null) {
+          saveAttendance(studentId!, studentName!);
+        }
+        _sendNotification(studentName ?? "Unknown Classic Device");
+      }
+    }
+  });
+}
+
 
   /// Stop BLE scanning
-  void _stopScanning() {
-    setState(() => isScanning = false);
-    scanSubscription?.cancel();
-    classicScanSubscription?.cancel();
-  }
+  /// Stop BLE and Classic Bluetooth scanning
+void _stopScanning() {
+  setState(() => isScanning = false);
+  scanSubscription?.cancel();
+  classicScanSubscription?.cancel();
+  scanSubscription = null;
+  classicScanSubscription = null;
+}
+
 
   Future<void> saveAttendance(String studentId, String studentName) async {
     try {
@@ -208,10 +232,10 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
           .collection('attendancehistory')
           .doc(date) // Use studentId as document ID
           .set({
-              '${studentName}-${studentId}':{
-                  'name':studentName,
-                  'time':time,
-              }
+            '${studentName}-${studentId}': {
+              'name': studentName,
+              'time': time,
+            }
           }, SetOptions(merge: true));
 
       if (kDebugMode) {
@@ -239,91 +263,319 @@ class _TakeAttendancePageState extends State<TakeAttendancePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Take Attendance"),
-        actions: [
-          if (detectedDevices.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: () {}, // Placeholder for saving attendance
-              tooltip: "Save Attendance",
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            color: isScanning ? Colors.green.shade100 : Colors.orange.shade100,
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(isScanning
-                    ? Icons.bluetooth_searching
-                    : Icons.bluetooth_disabled),
-                const SizedBox(width: 10),
-                Text(isScanning ? "Scanning for devices..." : "Scan stopped"),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Set Detection Range (meters):",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Slider(
-                  value: distanceThreshold,
-                  min: 1.0,
-                  max: 20.0,
-                  divisions: 19,
-                  label: "${distanceThreshold.toStringAsFixed(1)} m",
-                  onChanged: (value) {
-                    setState(() => distanceThreshold = value);
-                  },
-                ),
-                Text(
-                    "Current Range: ${distanceThreshold.toStringAsFixed(1)} meters",
-                    style: const TextStyle(fontSize: 16)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-              itemCount: detectedDevices.length,
-              itemBuilder: (context, index) {
-                final device = detectedDevices[index];
-                // Access the distance from the map, not calculating it again
-                final distance = device['distance'] ?? 'Unknown';
-                final distanceText = distance is double
-                    ? "${distance.toStringAsFixed(2)} m"
-                    : "Unknown";
+    double h = MediaQuery.of(context).size.height;
+    double w = MediaQuery.of(context).size.width;
 
-                return ListTile(
-                  title: Text("  "+device['name'] ?? "Unknown Device" ,style: TextStyle(fontSize: 20),),
-                  trailing: const Icon(Icons.check, color: Colors.green),
-                );
-              },
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          titleSpacing: w * 0.01,
+        ),
+        cardColor: AppColors.cardColor,
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            "Take Attendance",
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontWeight: FontWeight.w600,
+              fontSize: h * 0.02,
             ),
           ),
-          if (!isScanning)
-            ElevatedButton(
-              onPressed: _startScanning,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text("Start Scanning"),
+          actions: [
+            if (detectedDevices.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: IconButton(
+                  icon: Icon(Icons.save, color: AppColors.accentBlue),
+                  onPressed: () {}, // Placeholder for saving attendance
+                  tooltip: "Save Attendance",
+                ),
+              ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Status header
+            Container(
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.all(h * 0.018),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    isScanning 
+                      ? AppColors.accentGreen.withOpacity(0.2) 
+                      : AppColors.accentRed.withOpacity(0.2),
+                    isScanning 
+                      ? AppColors.accentBlue.withOpacity(0.2) 
+                      : AppColors.accentYellow.withOpacity(0.2),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isScanning
+                          ? AppColors.accentGreen.withOpacity(0.2)
+                          : AppColors.accentRed.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isScanning ? Icons.bluetooth_searching : Icons.bluetooth_disabled,
+                      color: isScanning ? AppColors.accentGreen : AppColors.accentRed,
+                      size: 22,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isScanning ? "Scanning for devices..." : "Scan stopped",
+                        style: TextStyle(
+                          color: AppColors.primaryText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Detection range: ${distanceThreshold.toStringAsFixed(1)} meters",
+                        style: TextStyle(
+                          color: AppColors.secondaryText,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          if (isScanning)
-            ElevatedButton(
-              onPressed: _stopScanning,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text("Stop Scanning"),
+
+            // Range slider
+            Container(
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Detection Range",
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                    
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.bluetooth_audio,
+                        color: AppColors.accentBlue,
+                        size: 16,
+                      ),
+                      Expanded(
+                        child: SliderTheme(
+                          data: SliderThemeData(
+                            activeTrackColor: AppColors.accentBlue,
+                            inactiveTrackColor: AppColors.accentBlue.withOpacity(0.2),
+                            thumbColor: AppColors.accentBlue,
+                            overlayColor: AppColors.accentBlue.withOpacity(0.1),
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: distanceThreshold,
+                            min: 1.0,
+                            max: 10.0,
+                            divisions: 19,
+                            label: "${distanceThreshold.toStringAsFixed(1)} m",
+                            onChanged: (value) {
+                              setState(() => distanceThreshold = value);
+                            },
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.bluetooth,
+                        color: AppColors.accentBlue,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          const SizedBox(height: 10),
-        ],
+
+            // Detected students section
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.accentBlue.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            color: AppColors.accentBlue,
+                            size: 20,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "Detected Students",
+                            style: TextStyle(
+                              color: AppColors.primaryText,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentBlue.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              "${detectedDevices.length}",
+                              style: TextStyle(
+                                color: AppColors.accentBlue,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.surfaceColor,
+                    ),
+                    Expanded(
+                      child: detectedDevices.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No students detected yet",
+                                style: TextStyle(
+                                  color: AppColors.secondaryText,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: EdgeInsets.all(8),
+                              itemCount: detectedDevices.length,
+                              separatorBuilder: (context, index) => Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: AppColors.surfaceColor,
+                              ),
+                              itemBuilder: (context, index) {
+                                final device = detectedDevices[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accentGreen.withOpacity(0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.check_circle_outline,
+                                      color: AppColors.accentGreen,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    device['name'] ?? "Unknown Device",
+                                    style: TextStyle(
+                                      color: AppColors.primaryText,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    "Present",
+                                    style: TextStyle(
+                                      color: AppColors.accentGreen,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  trailing: Icon(
+                                    device['type'] == 'BLE'
+                                        ? Icons.bluetooth
+                                        : Icons.bluetooth_connected,
+                                    color: AppColors.accentBlue,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Control button
+            Container(
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: isScanning ? _stopScanning : _startScanning,
+                icon: Icon(
+                  isScanning ? Icons.stop_circle : Icons.play_circle,
+                  color: AppColors.background,
+                ),
+                label: Text(
+                  isScanning ? 'Stop Scanning' : 'Start Scanning',
+                  style: TextStyle(
+                    color: AppColors.background,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isScanning ? AppColors.accentRed : AppColors.accentGreen,
+                  foregroundColor: AppColors.background,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

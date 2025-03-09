@@ -8,7 +8,25 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:open_file/open_file.dart';
 
+// Adding the AppColors class to match the class details screen styling
+class AppColors {
+  // Base colors
+  static const Color background = Color(0xFF121212);
+  static const Color surfaceColor = Color(0xFF1E1E1E);
+  static const Color cardColor = Color(0xFF252525);
 
+  // Subtle accent colors
+  static const Color accentBlue = Color(0xFF81A1C1);
+  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
+  static const Color accentPurple = Color(0xFFB48EAD);
+  static const Color accentYellow = Color(0xFFEBCB8B);
+  static const Color accentRed = Color(0xFFBF616A);
+
+  // Text colors
+  static const Color primaryText = Colors.white;
+  static const Color secondaryText = Color(0xFFAAAAAA);
+  static const Color tertiaryText = Color(0xFF757575);
+}
 
 class GeneratePdfScreen extends StatefulWidget {
   @override
@@ -87,7 +105,15 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
 
       if (content.isEmpty || content.startsWith("Error")) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to generate content! Try again.")),
+          SnackBar(
+            content: Text("Failed to generate content! Try again."),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: AppColors.accentRed.withOpacity(0.8),
+            duration: Duration(seconds: 2),
+          ),
         );
         setState(() => _isLoading = false);
         return;
@@ -137,14 +163,30 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("PDF saved in Downloads: $filePath")),
+        SnackBar(
+          content: Text("PDF saved in Downloads: $filePath"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: AppColors.accentGreen.withOpacity(0.8),
+          duration: Duration(seconds: 2),
+        ),
       );
 
       // Open the generated PDF
       OpenFile.open(filePath);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving PDF: $e")),
+        SnackBar(
+          content: Text("Error saving PDF: $e"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: AppColors.accentRed.withOpacity(0.8),
+          duration: Duration(seconds: 2),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -153,34 +195,317 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Generate PDF")),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _topicController,
-              decoration: InputDecoration(labelText: "Enter Topic"),
+    double h = MediaQuery.of(context).size.height;
+    double w = MediaQuery.of(context).size.width;
+
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          titleSpacing: w * 0.01,
+        ),
+        cardColor: AppColors.cardColor,
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.surfaceColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(color: AppColors.accentBlue, width: 1),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+          labelStyle: TextStyle(
+            color: AppColors.secondaryText,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            "Generate PDF",
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontWeight: FontWeight.w600,
+              fontSize: h * 0.02,
             ),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: () {
-                      String topic = _topicController.text.trim();
-                      if (topic.isNotEmpty) {
-                        generateAndSavePdf(topic);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Please enter a topic!")),
-                        );
-                      }
-                    },
-                    child: Text("Generate PDF"),
+          ),
+        ),
+        body: Column(
+          children: [
+            // Header section
+            Container(
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.all(h * 0.018),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.accentBlue.withOpacity(0.2),
+                    AppColors.accentPurple.withOpacity(0.2),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentBlue.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.description_outlined,
+                      color: AppColors.accentBlue,
+                      size: 22,
+                    ),
                   ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "AI Document Generator",
+                          style: TextStyle(
+                            color: AppColors.primaryText,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Enter any topic to generate a comprehensive PDF document",
+                          style: TextStyle(
+                            color: AppColors.secondaryText,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Input field - styled with card
+            Container(
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              decoration: BoxDecoration(
+                color: AppColors.cardColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Topic",
+                    style: TextStyle(
+                      color: AppColors.secondaryText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  TextField(
+                    controller: _topicController,
+                    decoration: InputDecoration(
+                      hintText: "Enter any topic for your document",
+                      hintStyle: TextStyle(
+                        color: AppColors.tertiaryText,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Generate button
+            Container(
+              margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        String topic = _topicController.text.trim();
+                        if (topic.isNotEmpty) {
+                          generateAndSavePdf(topic);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Please enter a topic!"),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              backgroundColor:
+                                  AppColors.accentYellow.withOpacity(0.8),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                icon: _isLoading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: AppColors.background,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Icon(Icons.picture_as_pdf, color: AppColors.background),
+                label: Text(
+                  _isLoading ? 'Generating...' : 'Generate PDF',
+                  style: TextStyle(
+                    color: AppColors.background,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      _isLoading ? AppColors.accentBlue.withOpacity(0.7) : AppColors.accentBlue,
+                  foregroundColor: AppColors.background,
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+
+            // Loading indicator and info
+            if (_isLoading)
+              Container(
+                margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.accentBlue.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.accentBlue,
+                          size: 18,
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Generating your document with AI",
+                            style: TextStyle(
+                              color: AppColors.primaryText,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      backgroundColor: AppColors.surfaceColor,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.accentBlue,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      "This may take a minute depending on the complexity of your topic",
+                      style: TextStyle(
+                        color: AppColors.secondaryText,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Additional tips card
+            
           ],
         ),
+      ),
+    );
+  }
+
+  Widget tipItem({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.accentBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.accentBlue,
+              size: 18,
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.primaryText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: AppColors.secondaryText,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

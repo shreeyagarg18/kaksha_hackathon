@@ -4,6 +4,26 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'analyze.dart';
 
+// Define app colors to match the StudentClassDetails style
+class AppColors {
+  // Base colors
+  static const Color background = Color(0xFF121212);
+  static const Color surfaceColor = Color(0xFF1E1E1E);
+  static const Color cardColor = Color(0xFF252525);
+
+  // Subtle accent colors
+  static const Color accentBlue = Color(0xFF81A1C1);
+  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
+  static const Color accentPurple = Color(0xFFB48EAD);
+  static const Color accentYellow = Color(0xFFEBCB8B);
+  static const Color accentRed = Color(0xFFBF616A);
+
+  // Text colors
+  static const Color primaryText = Colors.white;
+  static const Color secondaryText = Color(0xFFAAAAAA);
+  static const Color tertiaryText = Color(0xFF757575);
+}
+
 class AssignmentDetailScreen extends StatefulWidget {
   final String classId,
       assignmentId,
@@ -81,7 +101,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
           await _pdfService.extractTextFromPDF(widget.fileUrl);
       final rubricText = await _pdfService.extractTextFromPDF(widget.rubricUrl);
       _showSnackBar('Starting analysis of all submissions...',
-          color: Colors.indigo.shade700);
+          color: AppColors.accentBlue);
 
       for (int i = 0; i < submissions.length && mounted; i++) {
         final submission = submissions[i];
@@ -113,26 +133,25 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
           if (mounted) {
             _showSnackBar(
               'Analyzed ${submission['studentName'] ?? 'Unknown'} (${i + 1}/${submissions.length})',
-              color: Colors.indigo.shade900,
+              color: AppColors.accentBlue,
               duration: const Duration(seconds: 1),
             );
           }
         } catch (e) {
           if (mounted) {
             _showSnackBar('Error analyzing submission ${i + 1}: $e',
-                color: Colors.redAccent.shade700);
+                color: AppColors.accentRed);
           }
         }
       }
 
       if (mounted) {
-        _showSnackBar('All submissions analyzed and saved to Firebase',
-            color: Colors.green.shade700);
+        _showSnackBar('All submissions analyzed and saved',
+            color: AppColors.accentGreen);
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error during analysis: $e',
-            color: Colors.redAccent.shade700);
+        _showSnackBar('Error during analysis: $e', color: AppColors.accentRed);
       }
     } finally {
       if (mounted) setState(() => _isAnalyzingAll = false);
@@ -144,8 +163,11 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: color,
+        backgroundColor: color.withOpacity(0.8),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         duration: duration ?? const Duration(seconds: 4),
       ),
     );
@@ -160,10 +182,10 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF1A1A2E),
+          backgroundColor: AppColors.cardColor,
           title: const Text("Analysis Result",
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                  color: AppColors.primaryText, fontWeight: FontWeight.w600)),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,38 +195,42 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.indigo.shade900.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.indigo.shade800, width: 1),
+                    color: AppColors.surfaceColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.accentBlue.withOpacity(0.5),
+                      width: 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text("Marks:",
                           style: TextStyle(
-                              color: Colors.cyanAccent,
+                              color: AppColors.accentBlue,
                               fontWeight: FontWeight.bold,
                               fontSize: 16)),
                       const SizedBox(height: 6),
                       TextField(
                         controller: marksController,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 15),
+                        style: const TextStyle(
+                            color: AppColors.primaryText, fontSize: 15),
                         decoration: InputDecoration(
                           hintText: 'Enter marks',
-                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          hintStyle:
+                              TextStyle(color: AppColors.secondaryText),
                           border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.indigo.shade700),
-                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                                color: AppColors.accentBlue.withOpacity(0.5)),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide:
-                                const BorderSide(color: Colors.cyanAccent),
-                            borderRadius: BorderRadius.circular(8),
+                                const BorderSide(color: AppColors.accentBlue),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           filled: true,
-                          fillColor: Colors.indigo.shade900.withOpacity(0.3),
+                          fillColor: AppColors.background,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                         ),
@@ -215,27 +241,29 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                 const SizedBox(height: 16),
                 const Text("Feedback:",
                     style: TextStyle(
-                        color: Colors.cyanAccent,
+                        color: AppColors.accentBlue,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
                 const SizedBox(height: 6),
                 TextField(
                   controller: feedbackController,
-                  style: const TextStyle(color: Colors.white70, fontSize: 15),
+                  style: const TextStyle(
+                      color: AppColors.secondaryText, fontSize: 15),
                   maxLines: 8,
                   decoration: InputDecoration(
                     hintText: 'Enter feedback',
-                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    hintStyle: TextStyle(color: AppColors.tertiaryText),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.indigo.shade700),
-                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                          color: AppColors.accentBlue.withOpacity(0.5)),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.cyanAccent),
-                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.accentBlue),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Colors.indigo.shade900.withOpacity(0.3),
+                    fillColor: AppColors.background,
                     contentPadding: const EdgeInsets.all(12),
                   ),
                 ),
@@ -245,7 +273,8 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(foregroundColor: Colors.cyanAccent),
+              style: TextButton.styleFrom(
+                  foregroundColor: AppColors.secondaryText),
               child: const Text("Cancel"),
             ),
             if (isUpdating)
@@ -257,7 +286,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2)),
               )
             else
-              TextButton(
+              ElevatedButton(
                 onPressed: () async {
                   setState(() => isUpdating = true);
                   try {
@@ -278,20 +307,26 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                     if (context.mounted) {
                       Navigator.of(context).pop();
                       _showSnackBar('Analysis updated successfully',
-                          color: Colors.green.shade700);
+                          color: AppColors.accentGreen);
                     }
                   } catch (e) {
                     setState(() => isUpdating = false);
                     _showSnackBar('Error updating analysis: $e',
-                        color: Colors.redAccent.shade700);
+                        color: AppColors.accentRed);
                   }
                 },
-                style: TextButton.styleFrom(foregroundColor: Colors.cyanAccent),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentBlue,
+                  foregroundColor: AppColors.primaryText,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: const Text("Update"),
               ),
           ],
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
         ),
       ),
     );
@@ -302,7 +337,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error opening file.', color: Colors.redAccent.shade700);
+        _showSnackBar('Error opening file.', color: AppColors.accentRed);
       }
     }
   }
@@ -313,16 +348,17 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: Colors.indigo.shade900))),
+            border: Border(
+                top: BorderSide(color: AppColors.surfaceColor, width: 1))),
         child: Row(
           children: [
-            const Icon(Icons.description, color: Colors.cyanAccent),
+            Icon(Icons.description, color: AppColors.accentBlue),
             const SizedBox(width: 12),
             Text(label,
-                style: const TextStyle(
-                    color: Colors.cyanAccent, fontWeight: FontWeight.w500)),
+                style: TextStyle(
+                    color: AppColors.accentBlue, fontWeight: FontWeight.w500)),
             const Spacer(),
-            const Icon(Icons.download, color: Colors.cyanAccent),
+            Icon(Icons.download, color: AppColors.accentBlue),
           ],
         ),
       ),
@@ -334,26 +370,27 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-            color: hasAnalysis ? Colors.green.shade900 : Colors.transparent,
+            color: hasAnalysis ? AppColors.accentGreen : Colors.transparent,
             width: 1),
       ),
-      elevation: 2,
+      elevation: 0,
+      color: AppColors.cardColor,
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Column(
               children: [
                 Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Colors.indigo.shade800,
+                      backgroundColor: AppColors.accentBlue.withOpacity(0.2),
                       child: Text(
                           (submission['studentName'] ?? 'U')[0].toUpperCase(),
                           style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.primaryText,
                               fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 12),
@@ -364,12 +401,12 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                           Text(submission['studentName'] ?? 'Unknown',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
+                                  color: AppColors.primaryText)),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               Icon(Icons.access_time,
-                                  size: 14, color: Colors.grey.shade400),
+                                  size: 14, color: AppColors.tertiaryText),
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
@@ -381,7 +418,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                                       : 'No submission date',
                                   style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey.shade400),
+                                      color: AppColors.tertiaryText),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -393,12 +430,12 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                               child: Row(
                                 children: [
                                   const Icon(Icons.check_circle,
-                                      size: 14, color: Colors.green),
+                                      size: 14, color: AppColors.accentGreen),
                                   const SizedBox(width: 4),
                                   Text('Analysis available',
                                       style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.green.shade300)),
+                                          color: AppColors.accentGreen)),
                                 ],
                               ),
                             ),
@@ -413,8 +450,8 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.file_download,
-                            color: Colors.cyanAccent),
+                        icon: Icon(Icons.file_download,
+                            color: AppColors.accentBlue),
                         onPressed: () => _downloadFile(submission['fileUrl']),
                         tooltip: 'Download submission',
                         constraints: const BoxConstraints(),
@@ -429,16 +466,27 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                                 submission['fileUrl'], submissionId),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: hasAnalysis
-                              ? Colors.green.shade900
-                              : Colors.indigo.shade800,
+                              ? AppColors.accentGreen
+                              : AppColors.accentBlue,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
                         ),
-                        child: Text(_isAnalyzingMap[submissionId] == true
-                            ? 'Analyzing...'
-                            : hasAnalysis
-                                ? 'View Analysis'
-                                : 'Analyze'),
+                        child: Text(
+                          _isAnalyzingMap[submissionId] == true
+                              ? 'Analyzing...'
+                              : hasAnalysis
+                                  ? 'View Analysis'
+                                  : 'Analyze',
+                          style: TextStyle(
+                            color: hasAnalysis
+                                ? AppColors.background
+                                : AppColors.primaryText,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -451,10 +499,10 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.indigo.shade900.withOpacity(0.3),
+                color: AppColors.surfaceColor,
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
                 ),
               ),
               child: TextButton(
@@ -480,6 +528,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.accentBlue,
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -497,63 +546,44 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
     );
   }
 
-  ThemeData _buildTheme() => ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0F0F1A),
-        cardColor: const Color(0xFF1A1A2E),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF16213E),
-          elevation: 0,
-          centerTitle: false,
-          titleTextStyle: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: 0.5),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.indigo.shade800,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        textButtonTheme: const TextButtonThemeData(
-          style: ButtonStyle(
-              foregroundColor: MaterialStatePropertyAll(Colors.cyanAccent)),
-        ),
-        iconTheme: const IconThemeData(color: Colors.cyanAccent),
-        progressIndicatorTheme: ProgressIndicatorThemeData(
-          color: Colors.cyanAccent,
-          linearTrackColor: Colors.indigo.shade900,
-        ),
-      );
-
   @override
   Widget build(BuildContext context) {
     final formattedDate = DateFormat('dd MMM yyyy, hh:mm a')
         .format(DateTime.parse(widget.dueDate));
 
     return Theme(
-      data: _buildTheme(),
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+        ),
+        cardColor: AppColors.cardColor,
+      ),
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
           actions: [
             IconButton(
-              icon: const Icon(Icons.info_outline),
+              icon: const Icon(Icons.info_outline, color: AppColors.accentBlue),
               onPressed: () => showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  backgroundColor: const Color(0xFF1A1A2E),
+                  backgroundColor: AppColors.cardColor,
                   title: const Text("Assignment Info",
                       style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w600)),
+                          color: AppColors.primaryText,
+                          fontWeight: FontWeight.w600)),
                   content: Text(widget.description,
-                      style: const TextStyle(color: Colors.white70)),
+                      style: const TextStyle(color: AppColors.secondaryText)),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                          foregroundColor: AppColors.accentBlue),
                       child: const Text("Close"),
                     ),
                   ],
@@ -567,10 +597,12 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
             Card(
               margin: const EdgeInsets.all(16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.indigo.shade900, width: 1),
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                    color: AppColors.accentBlue.withOpacity(0.3), width: 1),
               ),
-              elevation: 4,
+              elevation: 0,
+              color: AppColors.cardColor,
               child: Column(
                 children: [
                   Padding(
@@ -582,30 +614,31 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                             style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white)),
+                                color: AppColors.primaryText)),
                         const SizedBox(height: 12),
                         Text(widget.description,
-                            style: TextStyle(
-                                color: Colors.grey.shade300, height: 1.4)),
+                            style: const TextStyle(
+                                color: AppColors.secondaryText, height: 1.4)),
                         const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.indigo.shade900.withOpacity(0.4),
+                            color: AppColors.surfaceColor,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: Colors.indigo.shade800, width: 1),
+                                color: AppColors.accentBlue.withOpacity(0.3),
+                                width: 1),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.calendar_today,
-                                  size: 16, color: Colors.cyanAccent),
+                              Icon(Icons.calendar_today,
+                                  size: 16, color: AppColors.accentBlue),
                               const SizedBox(width: 8),
                               Text("Due: $formattedDate",
                                   style: const TextStyle(
-                                      color: Colors.white70,
+                                      color: AppColors.secondaryText,
                                       fontWeight: FontWeight.w500)),
                             ],
                           ),
@@ -631,8 +664,8 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
-                        child: CircularProgressIndicator(
-                            color: Colors.cyanAccent));
+                        child:
+                            CircularProgressIndicator(color: AppColors.accentBlue));
                   }
 
                   final submissions = snapshot.data!.docs;
@@ -644,11 +677,11 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.hourglass_empty,
-                              size: 64, color: Colors.grey.shade600),
+                              size: 64, color: AppColors.tertiaryText),
                           const SizedBox(height: 16),
                           const Text("No submissions yet",
-                              style:
-                                  TextStyle(fontSize: 18, color: Colors.grey)),
+                              style: TextStyle(
+                                  fontSize: 18, color: AppColors.secondaryText)),
                         ],
                       ),
                     );
@@ -661,14 +694,15 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF16213E),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: const [
-                            BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: Offset(0, 2))
-                          ],
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.accentBlue.withOpacity(0.2),
+                              AppColors.accentPurple.withOpacity(0.2),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -678,18 +712,19 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                               children: [
                                 const Text("Submissions",
                                     style: TextStyle(
-                                        color: Colors.white70, fontSize: 14)),
+                                        color: AppColors.secondaryText,
+                                        fontSize: 14)),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(Icons.assignment_turned_in,
-                                        size: 18, color: Colors.cyanAccent),
+                                    Icon(Icons.assignment_turned_in,
+                                        size: 18, color: AppColors.accentBlue),
                                     const SizedBox(width: 8),
                                     Text("$submissionCount",
                                         style: const TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.white)),
+                                            color: AppColors.primaryText)),
                                   ],
                                 ),
                               ],
@@ -706,8 +741,12 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                               style: ElevatedButton.styleFrom(
                                 elevation: 0,
                                 backgroundColor: _isAnalyzingAll
-                                    ? Colors.indigo.shade900.withOpacity(0.5)
-                                    : Colors.indigo.shade800,
+                                    ? AppColors.surfaceColor
+                                    : AppColors.accentBlue,
+                                foregroundColor: AppColors.primaryText,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                               ),
                             ),
                           ],
@@ -726,23 +765,26 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                                   Text('Processing submissions...',
                                       style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.grey.shade400)),
+                                          color: AppColors.secondaryText)),
                                   Text(
                                       '${_currentAnalyzing}/${_totalToAnalyze}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.cyanAccent,
+                                          color: AppColors.accentBlue,
                                           fontWeight: FontWeight.bold)),
                                 ],
                               ),
                               const SizedBox(height: 6),
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(8),
                                 child: LinearProgressIndicator(
                                   value: _totalToAnalyze > 0
                                       ? _currentAnalyzing / _totalToAnalyze
                                       : 0,
                                   minHeight: 6,
+                                  backgroundColor: AppColors.surfaceColor,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.accentBlue),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -751,7 +793,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                         ),
                       Expanded(
                         child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: submissionCount,
                           itemBuilder: (context, index) {
                             final submission = submissions[index];

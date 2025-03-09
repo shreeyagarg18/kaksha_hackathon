@@ -8,6 +8,25 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:open_file/open_file.dart';
 
+// Color palette matching StudentClassDetails
+class AppColors {
+  // Base colors
+  static const Color background = Color(0xFF121212);
+  static const Color surfaceColor = Color(0xFF1E1E1E);
+  static const Color cardColor = Color(0xFF252525);
+
+  // Subtle accent colors
+  static const Color accentBlue = Color(0xFF81A1C1);
+  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
+  static const Color accentPurple = Color(0xFFB48EAD);
+  static const Color accentYellow = Color(0xFFEBCB8B);
+  static const Color accentRed = Color(0xFFBF616A);
+
+  // Text colors
+  static const Color primaryText = Colors.white;
+  static const Color secondaryText = Color(0xFFAAAAAA);
+  static const Color tertiaryText = Color(0xFF757575);
+}
 
 class GenerateQuestionPaperScreen extends StatefulWidget {
   @override
@@ -101,7 +120,14 @@ class _GenerateQuestionPaperScreenState
 
       if (numQuestions <= 0 || topic.isEmpty || difficulty.isEmpty || marks.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please fill in all required fields!")),
+          SnackBar(
+            content: Text("Please fill in all required fields!"),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: AppColors.accentRed.withOpacity(0.8),
+          ),
         );
         setState(() => _isLoading = false);
         return;
@@ -112,7 +138,14 @@ class _GenerateQuestionPaperScreenState
 
       if (content.isEmpty || content.startsWith("Error")) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to generate questions! Try again.")),
+          SnackBar(
+            content: Text("Failed to generate questions! Try again."),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: AppColors.accentRed.withOpacity(0.8),
+          ),
         );
         setState(() => _isLoading = false);
         return;
@@ -165,58 +198,299 @@ class _GenerateQuestionPaperScreenState
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("PDF saved in Downloads: $filePath")),
+        SnackBar(
+          content: Text('PDF saved in Downloads: $filePath'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: AppColors.accentGreen.withOpacity(0.8),
+          duration: Duration(seconds: 2),
+        ),
       );
 
       // Open the generated PDF
       OpenFile.open(filePath);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving PDF: $e")),
+        SnackBar(
+          content: Text("Error saving PDF: $e"),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: AppColors.accentRed.withOpacity(0.8),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  // Custom styled text field matching the design
+  Widget _buildStyledTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+    bool isOptional = false,
+  }) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accentBlue.withOpacity(0.3), width: 1),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: TextStyle(color: AppColors.primaryText),
+        decoration: InputDecoration(
+          labelText: label + (isOptional ? " (Optional)" : ""),
+          labelStyle: TextStyle(
+            color: AppColors.secondaryText,
+            fontSize: 14,
+          ),
+          floatingLabelStyle: TextStyle(
+            color: AppColors.accentBlue,
+            fontSize: 16,
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          suffixIcon: isOptional
+              ? Icon(Icons.info_outline, 
+                 color: AppColors.tertiaryText,
+                 size: 18)
+              : null,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Generate Question Paper")),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _numQuestionsController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Number of Questions"),
+    double h = MediaQuery.of(context).size.height;
+    double w = MediaQuery.of(context).size.width;
+
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          titleSpacing: w * 0.01,
+        ),
+        cardColor: AppColors.cardColor,
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            "Generate Question Paper",
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontWeight: FontWeight.w600,
+              fontSize: h * 0.02,
             ),
-            TextField(
-              controller: _topicController,
-              decoration: InputDecoration(labelText: "Topic"),
-            ),
-            TextField(
-              controller: _difficultyController,
-              decoration: InputDecoration(labelText: "Difficulty Level"),
-            ),
-            TextField(
-              controller: _marksController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: "Marks per Question"),
-            ),
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: "Additional Description (Optional)"),
-            ),
-            SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: generateAndSavePdf,
-                    child: Text("Generate Question Paper"),
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section with gradient background
+                Container(
+                  margin: EdgeInsets.only(bottom: 20),
+                  padding: EdgeInsets.all(h * 0.018),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.accentBlue.withOpacity(0.2),
+                        AppColors.accentPurple.withOpacity(0.2),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-          ],
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentBlue.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.file_present_outlined,
+                          color: AppColors.accentBlue,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Question Paper Generator",
+                              style: TextStyle(
+                                color: AppColors.primaryText,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Fill in the details below to generate your custom question paper",
+                              style: TextStyle(
+                                color: AppColors.secondaryText,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Form Fields Container
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Paper Details",
+                        style: TextStyle(
+                          color: AppColors.accentBlue,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Styled Text Fields
+                      _buildStyledTextField(
+                        controller: _numQuestionsController,
+                        label: "Number of Questions",
+                        keyboardType: TextInputType.number,
+                      ),
+                      _buildStyledTextField(
+                        controller: _topicController,
+                        label: "Topic",
+                      ),
+                      _buildStyledTextField(
+                        controller: _difficultyController,
+                        label: "Difficulty Level",
+                      ),
+                      _buildStyledTextField(
+                        controller: _marksController,
+                        label: "Marks per Question",
+                        keyboardType: TextInputType.number,
+                      ),
+                      _buildStyledTextField(
+                        controller: _descriptionController,
+                        label: "Additional Description",
+                        isOptional: true,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(height: 20),
+                
+                // Generate Button
+                Container(
+                  width: double.infinity,
+                  child: _isLoading
+                      ? Center(
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.accentBlue,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                "Generating Question Paper...",
+                                style: TextStyle(
+                                  color: AppColors.secondaryText,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: generateAndSavePdf,
+                          icon: Icon(Icons.create_new_folder_outlined, color: AppColors.background),
+                          label: Text(
+                            'Generate Question Paper',
+                            style: TextStyle(
+                              color: AppColors.background,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accentGreen,
+                            foregroundColor: AppColors.background,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                ),
+                
+                SizedBox(height: 16),
+                
+                // Tip Section
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentYellow.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.accentYellow.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: AppColors.accentYellow,
+                        size: 20,
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Tip: For the best results, provide a specific topic and clear difficulty level.",
+                          style: TextStyle(
+                            color: AppColors.accentYellow,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
