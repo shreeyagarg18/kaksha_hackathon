@@ -92,6 +92,7 @@ flutter:
   assets:
     - assets/animation.json
     - assets/attendance.json
+    - assets/front.json
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

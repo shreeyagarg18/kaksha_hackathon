@@ -1,7 +1,7 @@
 import 'package:classcare/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_button/flutter_swipe_button.dart';
-
+import 'package:lottie/lottie.dart';
 class Start extends StatelessWidget {
   const Start({super.key});
 
@@ -16,11 +16,14 @@ class Start extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // App Icon
-              Icon(
-                Icons.school_rounded,
-                size: 165,
-                color: const Color.fromRGBO(38, 166, 154, 1),
-              ),
+              SizedBox(
+                      height: 200, // Adjust height as needed
+                      child: Lottie.asset(
+                        'assets/front.json', // Ensure this file is present in assets
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
               const SizedBox(height: 10),
 
               // Welcome Text

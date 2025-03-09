@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/start':(context)=>Start(),
       },
-      title: 'Flutter Demo',
+      title: 'Kaksha',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
