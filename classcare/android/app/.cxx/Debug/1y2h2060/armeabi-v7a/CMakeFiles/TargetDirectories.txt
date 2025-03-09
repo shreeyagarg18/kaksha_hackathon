@@ -1,2 +1,0 @@
-D:/ClassCare/classcare/android/app/.cxx/Debug/1y2h2060/armeabi-v7a/CMakeFiles/edit_cache.dir
-D:/ClassCare/classcare/android/app/.cxx/Debug/1y2h2060/armeabi-v7a/CMakeFiles/rebuild_cache.dir
