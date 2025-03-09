@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:lottie/lottie.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({Key? key}) : super(key: key);
@@ -45,19 +46,20 @@ class _AttendanceScreen extends State<AttendanceScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
+        backgroundColor: Colors.black87,
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        content: Text(message, style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await openAppSettings(); // Opens app settings to manage Bluetooth
+              await openAppSettings();
             },
-            child: const Text("Open Settings"),
+            child: const Text("Open Settings", style: TextStyle(color: Colors.blue)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text("Cancel", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -77,12 +79,10 @@ class _AttendanceScreen extends State<AttendanceScreen> {
   // Toggle Bluetooth status
   Future<void> _toggleBluetooth() async {
     if (isBluetoothOn) {
-      // No action if Bluetooth is already ON
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Bluetooth is already ON")),
       );
     } else {
-      // Suggest user turn on Bluetooth manually
       _showBluetoothDialog(
         title: "Turn On Bluetooth",
         message: "Bluetooth is off. Please turn it on manually in system settings.",
@@ -93,34 +93,36 @@ class _AttendanceScreen extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black, // Dark theme background
       appBar: AppBar(
-        title: const Text('Bluetooth Control'),
+        backgroundColor: Colors.black87,
+        title: const Text('Give Attendance', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: isCheckingStatus
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    isBluetoothOn ? Icons.bluetooth : Icons.bluetooth_disabled,
-                    size: 80,
-                    color: isBluetoothOn ? Colors.blue : Colors.grey,
+                  Lottie.asset(
+                    'assets/attendance.json', // Replace with your Lottie animation file
+                    width: 400, // Increased size
+                    height: 400, // Increased size
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isBluetoothOn ? 'Bluetooth is ON' : 'Bluetooth is OFF',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 80),
                   ElevatedButton.icon(
                     onPressed: _toggleBluetooth,
-                    icon: Icon(isBluetoothOn ? Icons.check : Icons.settings),
-                    label: Text(isBluetoothOn ? 'Bluetooth is ON' : 'Turn ON Bluetooth'),
+                    icon: Icon(isBluetoothOn ? Icons.check : Icons.settings, color: Colors.white),
+                    label: Text(
+                      isBluetoothOn ? 'Bluetooth is ON' : 'Turn ON Bluetooth',
+                      style: const TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isBluetoothOn ? Colors.green : Colors.blue,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(200, 50),
+                      backgroundColor: isBluetoothOn ? Color.fromARGB(255, 91, 196, 96) : Color(0xFFBF616A),
+                      minimumSize: const Size(220, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                   ),
                 ],

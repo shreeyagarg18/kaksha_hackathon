@@ -181,71 +181,62 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _emailField() {
-    return TextField(
-      controller: _emailController,
-      style:
-          const TextStyle(color: Colors.white), // Ensures typed text is white
-      decoration: InputDecoration(
-        labelText: 'Email',
-        labelStyle: const TextStyle(color: Color.fromARGB(255, 118, 181, 200)),
-        hintText: 'Enter your email',
-        hintStyle: const TextStyle(color: Colors.grey), // Makes hint visible
-        filled: true,
-        fillColor: const Color.fromARGB(255, 24, 20, 20),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
-          borderSide:
-              const BorderSide(color: Colors.white, width: 2), // White border
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(
-              color: Colors.white, width: 2), // White border when not focused
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(
-              color: Colors.white, width: 2), // White border when focused
-        ),
+  return TextField(
+    controller: _emailController,
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      labelText: 'Email',
+      labelStyle: const TextStyle(color: Color.fromARGB(255, 118, 181, 200)),
+      hintText: 'Enter your email',
+      hintStyle: const TextStyle(color: Colors.grey),
+      filled: true,
+      fillColor: const Color.fromARGB(255, 24, 20, 20),
+      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Added border radius
+        borderSide: const BorderSide(color: Colors.white, width: 2),
       ),
-    );
-  }
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Added border radius
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Added border radius
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
+    ),
+  );
+}
 
-  Widget _passwordField() {
-    return TextField(
-      controller: _passwordController,
-      obscureText: true,
-      style:
-          const TextStyle(color: Colors.white), // Ensures typed text is white
-      decoration: InputDecoration(
-        labelText: 'Password',
-        labelStyle: const TextStyle(color: Color.fromARGB(255, 118, 181, 200)),
-        hintText: 'Enter your password',
-        hintStyle: const TextStyle(color: Colors.grey), // Makes hint visible
-        filled: true,
-        fillColor: const Color.fromARGB(255, 20, 18, 18),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
-          borderSide:
-              const BorderSide(color: Colors.white, width: 2), // White border
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(
-              color: Colors.white, width: 2), // White border when not focused
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(
-              color: Colors.white, width: 2), // White border when focused
-        ),
+Widget _passwordField() {
+  return TextField(
+    controller: _passwordController,
+    obscureText: true,
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      labelText: 'Password',
+      labelStyle: const TextStyle(color: Color.fromARGB(255, 118, 181, 200)),
+      hintText: 'Enter your password',
+      hintStyle: const TextStyle(color: Colors.grey),
+      filled: true,
+      fillColor: const Color.fromARGB(255, 20, 18, 18),
+      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Added border radius
+        borderSide: const BorderSide(color: Colors.white, width: 2),
       ),
-    );
-  }
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Added border radius
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), // Added border radius
+        borderSide: const BorderSide(color: Colors.white, width: 2),
+      ),
+    ),
+  );
+}
+
 
   Widget _loginButton() {
     return SizedBox(

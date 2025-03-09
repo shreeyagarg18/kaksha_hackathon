@@ -253,20 +253,21 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false, 
-        title: const Text("Teacher Dashboard" , style: TextStyle(color: AppColors.accentYellow),),
+        title: const Text("Teacher Dashboard" , style: TextStyle(color: Colors.white),),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout , color: AppColors.accentYellow,),
+            icon: const Icon(Icons.logout , color: Colors.white,),
             onPressed: () async {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text('Logout'),
-                  content: Text('Are you sure you want to log out?'),
+                  backgroundColor: Colors.grey[800],
+                  title: Text('Logout',style: TextStyle(color: Colors.white)),
+                  content: Text('Are you sure you want to log out?',style: TextStyle(color: Colors.white)),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
+                      child: Text('Cancel',style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -275,7 +276,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         Navigator.pushReplacementNamed(
                             context, '/start'); // Navigate to login screen
                       },
-                      child: Text('Logout'),
+                      child: Text('Logout',style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),

@@ -175,75 +175,85 @@ class _homeStudentstate extends State<homeStudent> {
   // UI for entering the join code
   Widget buildJoinClassForm() {
     return Padding(
-  padding: const EdgeInsets.all(20.0),
-  child: Column(
-    children: [
-      TextField(
-        controller: _joinCodeController,
-        style: TextStyle(color: Colors.white), // White text inside text field
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800], // Grey background for text field
-          labelText: 'Enter Join Code',
-          labelStyle: TextStyle(color: Colors.white), // White label text
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Colors.white), // White border
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _joinCodeController,
+            style:
+                TextStyle(color: Colors.white), // White text inside text field
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.grey[800], // Grey background for text field
+              labelText: 'Enter Join Code',
+              labelStyle: TextStyle(color: Colors.white), // White label text
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(color: Colors.white), // White border
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(
+                    color: Colors.white), // White border when enabled
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(
+                    color: Colors.white), // White border when focused
+              ),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Colors.white), // White border when enabled
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              joinClass(_joinCodeController.text.trim());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey[800], // Grey button background
+              side: BorderSide(color: Colors.white), // White border for button
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            child: Text(
+              'Join Class',
+              style: TextStyle(color: Colors.white), // White text on button
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Colors.white), // White border when focused
-          ),
-        ),
+        ],
       ),
-      SizedBox(height: 20),
-      ElevatedButton(
-        onPressed: () {
-          joinClass(_joinCodeController.text.trim());
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.grey[800], // Grey button background
-          side: BorderSide(color: Colors.white), // White border for button
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        child: Text(
-          'Join Class',
-          style: TextStyle(color: Colors.white), // White text on button
-        ),
-      ),
-    ],
-  ),
-);
-
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:  Color(0xFF252525),
+      backgroundColor: Color(0xFF252525),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        automaticallyImplyLeading: false, 
-        title: Text('Student Dashboard' , style: TextStyle(color: Colors.white),),
+        automaticallyImplyLeading: false,
+        title: Text(
+          'Student Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app , color: Colors.white,),
+            icon: Icon(
+              Icons.exit_to_app,
+              color: Colors.white,
+            ),
             onPressed: () {
               showDialog(
+                
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text('Logout'),
-                  content: Text('Are you sure you want to log out?'),
+                  backgroundColor: Colors.grey[800],
+                  title: Text('Logout',style: TextStyle(color: Colors.white),),
+                  content: Text('Are you sure you want to log out?',style: TextStyle(color: Colors.white,)),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel'),
+                      child: Text('Cancel',style: TextStyle(color: Colors.white),),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -252,7 +262,7 @@ class _homeStudentstate extends State<homeStudent> {
                         Navigator.pushReplacementNamed(
                             context, '/start'); // Navigate to login screen
                       },
-                      child: Text('Logout'),
+                      child: Text('Logout' ,style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -282,48 +292,51 @@ class _homeStudentstate extends State<homeStudent> {
           ),
           // Button for student to join a class using the join code
           Padding(
-  padding: const EdgeInsets.all(20.0),
-  child: ElevatedButton(
-    onPressed: () {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            backgroundColor: Colors.grey[800], // Dialog background color
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.white), // White border for dialog
-            ),
-            title: Text(
-              'Join a Class',
-              style: TextStyle(color: Colors.white), // White text for title
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  buildJoinClassForm(),
-                ],
+            padding: const EdgeInsets.all(20.0),
+            child: ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      backgroundColor:
+                          Colors.grey[800], // Dialog background color
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                            color: Colors.white), // White border for dialog
+                      ),
+                      title: Text(
+                        'Join a Class',
+                        style: TextStyle(
+                            color: Colors.white), // White text for title
+                      ),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            buildJoinClassForm(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800], // Button background color
+                side:
+                    BorderSide(color: Colors.white), // White border for button
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(
+                'Join a class',
+                style: TextStyle(color: Colors.white), // White text for button
               ),
             ),
-          );
-        },
-      );
-    },
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.grey[800], // Button background color
-      side: BorderSide(color: Colors.white), // White border for button
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-    ),
-    child: Text(
-      'Join a class',
-      style: TextStyle(color: Colors.white), // White text for button
-    ),
-  ),
-)
-
+          )
         ],
       ),
     );

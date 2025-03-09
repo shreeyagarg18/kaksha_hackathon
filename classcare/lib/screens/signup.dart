@@ -118,14 +118,16 @@ class _SignupPageState extends State<SignupPage> {
                     decoration: InputDecoration(
                       labelText: "Full Name",
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(0),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
                             color: Colors.white), // White outline
                       ),
-                      enabledBorder: const OutlineInputBorder(
+                      enabledBorder: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white, width: 2),
                       ),
                       prefixIcon: const Icon(Icons.person, color: Colors.white),
@@ -145,13 +147,15 @@ class _SignupPageState extends State<SignupPage> {
                     decoration: InputDecoration(
                       labelText: "Email",
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(0),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.white),
                       ),
-                      enabledBorder: const OutlineInputBorder(
+                      enabledBorder: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder:  OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white, width: 2),
                       ),
                       prefixIcon: const Icon(Icons.email, color: Colors.white),
@@ -172,13 +176,15 @@ class _SignupPageState extends State<SignupPage> {
                     decoration: InputDecoration(
                       labelText: "Password",
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(0),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.white),
                       ),
-                      enabledBorder: const OutlineInputBorder(
+                      enabledBorder:  OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder:  OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white, width: 2),
                       ),
                       prefixIcon: const Icon(Icons.lock, color: Colors.white),
@@ -199,13 +205,15 @@ class _SignupPageState extends State<SignupPage> {
                     decoration: InputDecoration(
                       labelText: "Confirm Password",
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(0),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.white),
                       ),
-                      enabledBorder: const OutlineInputBorder(
+                      enabledBorder:  OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: Colors.white, width: 2),
                       ),
                       prefixIcon: const Icon(Icons.lock, color: Colors.white),
@@ -239,7 +247,7 @@ class _SignupPageState extends State<SignupPage> {
                               side: const BorderSide(color: Colors.white),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                             child: const Text(
                               'Sign Up',
