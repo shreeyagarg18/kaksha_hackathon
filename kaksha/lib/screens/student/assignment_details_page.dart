@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:classcare/widgets/Colors.dart';
 
 class AssignmentDetailPage extends StatefulWidget {
   final QueryDocumentSnapshot assignment;
@@ -265,7 +266,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
             Row(
               children: [
                 Icon(Icons.analytics_outlined,
-                    color: _theme['accent'], size: w * 0.06),
+                    color: AppColors.accentGreen, size: w * 0.06),
                 SizedBox(width: w * 0.02),
                 Text("Assignment Analysis",
                     style: TextStyle(
@@ -297,17 +298,17 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.info_outline, color: _theme['accent']),
+                    Icon(Icons.info_outline, color:AppColors.accentGreen),
                     SizedBox(width: 8),
                     Text("View Full Analysis",
-                        style: TextStyle(color: _theme['accent'])),
+                        style: TextStyle(color: AppColors.accentGreen)),
                   ],
                 ),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: _theme['accent']!),
+                    side: BorderSide(color:AppColors.accentGreen!),
                   ),
                 ),
               ),
@@ -377,20 +378,14 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                         vertical: h * 0.015, horizontal: w * 0.04),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
+                        colors: [
+                          AppColors.accentBlue.withOpacity(0.2),
+                          AppColors.accentPurple.withOpacity(0.2),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          _theme['primary']!.withOpacity(0.6),
-                          _theme['primary']!.withOpacity(0.2)
-                        ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                            color: _theme['primary']!.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 2))
-                      ],
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
@@ -433,7 +428,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                           Row(
                             children: [
                               Icon(Icons.description_outlined,
-                                  color: _theme['accent'], size: w * 0.06),
+                                  color: AppColors.accentBlue, size: w * 0.06),
                               SizedBox(width: w * 0.02),
                               Text("Assignment Details",
                                   style: TextStyle(
@@ -477,23 +472,27 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                         leading: Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: _theme['primary']!.withOpacity(0.2),
+                            color: AppColors.accentBlue.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(Icons.assignment_outlined,
-                              size: w * 0.06, color: _theme['primary']),
+                              size: w * 0.06, color: AppColors.accentBlue),
                         ),
                         title: Text("Assignment File",
                             style: TextStyle(
                                 fontSize: w * 0.04,
-                                color: _theme['textPrimary'])),
+                                color: AppColors.accentBlue)),
                         subtitle: Text("Click to download",
                             style: TextStyle(
                                 fontSize: w * 0.03,
                                 color: _theme['textSecondary'])),
-                        trailing: ElevatedButton.icon(
-                          icon: Icon(Icons.download_outlined, size: w * 0.053),
-                          label: Text(""),
+                        trailing: IconButton(
+                          icon: Icon(
+                            Icons.download_outlined,
+                            size: w * 0.053,
+                            color: AppColors.accentBlue,
+                          ),
+                          // label: Text(""),
                           onPressed: () => downloadFile(fileUrl),
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -526,8 +525,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                     ? Icons.check_circle_outline
                                     : Icons.pending_outlined,
                                 color: _isSubmitted
-                                    ? _theme['success']
-                                    : _theme['warning'],
+                                    ? AppColors.accentGreen
+                                    : AppColors.accentYellow,
                                 size: w * 0.06,
                               ),
                               SizedBox(width: w * 0.02),
@@ -539,8 +538,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                   fontSize: w * 0.045,
                                   fontWeight: FontWeight.bold,
                                   color: _isSubmitted
-                                      ? _theme['success']
-                                      : _theme['warning'],
+                                      ? AppColors.accentGreen
+                                      : AppColors.accentYellow,
                                 ),
                               ),
                             ],
@@ -618,7 +617,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                 onPressed:
                                     _isSubmitting ? null : uploadSubmission,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: _theme['primary'],
+                                  backgroundColor: AppColors.accentBlue,
                                   foregroundColor: Colors.white,
                                   disabledBackgroundColor:
                                       _theme['primary']!.withOpacity(0.5),
@@ -648,8 +647,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                           SizedBox(width: w * 0.02),
                                           Text("Submit Assignment",
                                               style: TextStyle(
-                                                  color: const Color.fromARGB(
-                                                      31, 4, 4, 4),
+                                                  color: const Color.fromARGB(255, 255, 255, 255),
                                                   fontSize: w * 0.05,
                                                   fontWeight: FontWeight.bold,
                                                   letterSpacing: 0.5)),
@@ -705,7 +703,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                   IconButton(
                                     icon: Icon(Icons.download_outlined,
                                         size: w * 0.05,
-                                        color: _theme['accent']),
+                                        color: AppColors.accentGreen),
                                     onPressed: _submittedFileUrl != null
                                         ? () => downloadFile(_submittedFileUrl!)
                                         : null,

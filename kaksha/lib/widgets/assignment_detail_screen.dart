@@ -479,7 +479,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                           _isAnalyzingMap[submissionId] == true
                               ? 'Analyzing...'
                               : hasAnalysis
-                                  ? 'View Analysis'
+                                  ? 'Analyze'
                                   : 'Analyze',
                           style: TextStyle(
                             color: hasAnalysis

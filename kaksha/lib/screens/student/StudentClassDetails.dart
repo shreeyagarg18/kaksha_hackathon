@@ -216,7 +216,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
             Container(
               margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
               padding: EdgeInsets.all(h * 0.018),
-              decoration: BoxDecoration(
+              decoration: BoxDecoration( 
                 gradient: LinearGradient(
                   colors: [
                     AppColors.accentBlue.withOpacity(0.2),

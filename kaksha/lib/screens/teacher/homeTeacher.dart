@@ -65,9 +65,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       // List of fixed colors
       List<Color> availableColors = [
         AppColors.accentBlue,
-        AppColors.accentGreen,
-        AppColors.accentPurple,
         AppColors.accentYellow,
+        Color.fromARGB(255, 101, 170, 181),
+        Color.fromARGB(255, 232, 117, 117),
+        Color.fromARGB(255, 123, 211, 234)
       ];
 
       // Randomly select a color
@@ -104,24 +105,52 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Create New Class"),
+        backgroundColor: Colors.grey[800],
+        title: const Text(
+          "Create New Class",
+          style: TextStyle(color: Colors.white),
+        ),
         content: SizedBox(
           height: 150,
           child: Column(
             children: [
               TextField(
                 controller: _classNameController,
+                style: const TextStyle(color: Colors.white), // Text color
+                cursorColor: Colors.white, // Cursor color
                 decoration: const InputDecoration(
                   labelText: 'Class Name',
                   border: OutlineInputBorder(),
+                  labelStyle:
+                      TextStyle(color: Colors.white), // Label text color
+                  enabledBorder: OutlineInputBorder(
+                    // Border color when not focused
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    // Border color when focused
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
               TextField(
                 controller: _slotController,
+                style: const TextStyle(color: Colors.white), // Text color
+                cursorColor: Colors.white, // Cursor color
                 decoration: const InputDecoration(
                   labelText: 'Slot',
                   border: OutlineInputBorder(),
+                  labelStyle:
+                      TextStyle(color: Colors.white), // Label text color
+                  enabledBorder: OutlineInputBorder(
+                    // Border color when not focused
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    // Border color when focused
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
               ),
             ],
@@ -130,9 +159,14 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text(
+              "Cancel",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           ElevatedButton(
+            style:
+                ElevatedButton.styleFrom(backgroundColor: Colors.transparent),
             onPressed: () {
               if (_classNameController.text.trim().isNotEmpty &&
                   _slotController.text.trim().isNotEmpty) {
@@ -142,7 +176,10 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                 _slotController.clear();
               }
             },
-            child: const Text("Create"),
+            child: const Text(
+              "Create",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -191,10 +228,9 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                       Text(
                         classData['className'],
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black
-                        ),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -252,22 +288,30 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       backgroundColor: const Color.fromARGB(255, 27, 26, 27),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        automaticallyImplyLeading: false, 
-        title: const Text("Teacher Dashboard" , style: TextStyle(color: Colors.white),),
+        automaticallyImplyLeading: false,
+        title: const Text(
+          "Teacher Dashboard",
+          style: TextStyle(color: Colors.white),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout , color: Colors.white,),
+            icon: const Icon(
+              Icons.logout,
+              color: Colors.white,
+            ),
             onPressed: () async {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
                   backgroundColor: Colors.grey[800],
-                  title: Text('Logout',style: TextStyle(color: Colors.white)),
-                  content: Text('Are you sure you want to log out?',style: TextStyle(color: Colors.white)),
+                  title: Text('Logout', style: TextStyle(color: Colors.white)),
+                  content: Text('Are you sure you want to log out?',
+                      style: TextStyle(color: Colors.white)),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Cancel',style: TextStyle(color: Colors.white)),
+                      child:
+                          Text('Cancel', style: TextStyle(color: Colors.white)),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -276,7 +320,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                         Navigator.pushReplacementNamed(
                             context, '/start'); // Navigate to login screen
                       },
-                      child: Text('Logout',style: TextStyle(color: Colors.white)),
+                      child:
+                          Text('Logout', style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
