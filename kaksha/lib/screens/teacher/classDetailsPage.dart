@@ -11,12 +11,11 @@ import 'package:classcare/screens/teacher/take_attendance_page.dart';
 
 // Refined color palette with subtle tones
 class AppColors {
-  // Base colors
+  // come ill show you cme ikk shiw you the appwha
   static const Color background = Color(0xFF121212);
   static const Color surfaceColor = Color(0xFF1E1E1E);
   static const Color cardColor = Color(0xFF252525);
-
-  // Subtle accent colors
+// Subtle accent colors
   static const Color accentBlue = Color(0xFF81A1C1);
   static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
   static const Color accentPurple = Color(0xFFB48EAD);
@@ -227,7 +226,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: false,
-          titleSpacing: w*0.01,
+          titleSpacing: w * 0.01,
         ),
         cardColor: AppColors.cardColor,
       ),
@@ -238,7 +237,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
             style: TextStyle(
               color: AppColors.primaryText,
               fontWeight: FontWeight.w600,
-              fontSize: h*0.02,
+              fontSize: h * 0.02,
             ),
           ),
         ),
@@ -257,14 +256,14 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                     Icon(
                       Icons.school_outlined,
                       color: AppColors.accentBlue,
-                      size: h*0.04,
+                      size: h * 0.04,
                     ),
                     SizedBox(height: 8),
                     Text(
                       "Class Options",
                       style: TextStyle(
                         color: AppColors.primaryText,
-                        fontSize: h*0.02,
+                        fontSize: h * 0.02,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -300,16 +299,23 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                 leading: Icon(Icons.assignment, color: AppColors.accentBlue),
                 title: Text("Generate Question Paper",
                     style: TextStyle(color: AppColors.primaryText)),
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>GenerateQuestionPaperScreen()));
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => GenerateQuestionPaperScreen()));
                 },
               ),
               ListTile(
-                leading: Icon(Icons.document_scanner, color: const Color.fromARGB(255, 193, 129, 129)),
+                leading: Icon(Icons.document_scanner,
+                    color: const Color.fromARGB(255, 193, 129, 129)),
                 title: Text("Generate Document",
                     style: TextStyle(color: AppColors.primaryText)),
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>GeneratePdfScreen()));
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => GeneratePdfScreen()));
                 },
               ),
             ],
@@ -320,7 +326,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
             // Class header section
             Container(
               margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
-              padding: EdgeInsets.all(h*0.018),
+              padding: EdgeInsets.all(h * 0.018),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -330,7 +336,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(w*0.03),
+                borderRadius: BorderRadius.circular(w * 0.03),
               ),
               child: Row(
                 children: [
@@ -373,7 +379,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
               height: 56,
               decoration: BoxDecoration(
                 color: AppColors.surfaceColor,
-                borderRadius: BorderRadius.circular(w*0.03),
+                borderRadius: BorderRadius.circular(w * 0.03),
               ),
               child: Row(
                 children: [
@@ -472,7 +478,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                           color: _currentIndex == 2
                               ? AppColors.cardColor
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(w*0.03),
+                          borderRadius: BorderRadius.circular(w * 0.03),
                           border: _currentIndex == 2
                               ? Border.all(
                                   color: AppColors.accentBlue.withOpacity(0.5),
@@ -515,7 +521,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                 margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
                 decoration: BoxDecoration(
                   color: AppColors.cardColor,
-                  borderRadius: BorderRadius.circular(w*0.03),
+                  borderRadius: BorderRadius.circular(w * 0.03),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: TabBarView(

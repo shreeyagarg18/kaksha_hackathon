@@ -7,26 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:open_file/open_file.dart';
-
-// Color palette matching StudentClassDetails
-class AppColors {
-  // Base colors
-  static const Color background = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-
-  // Subtle accent colors
-  static const Color accentBlue = Color(0xFF81A1C1);
-  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
-  static const Color accentPurple = Color(0xFFB48EAD);
-  static const Color accentYellow = Color(0xFFEBCB8B);
-  static const Color accentRed = Color(0xFFBF616A);
-
-  // Text colors
-  static const Color primaryText = Colors.white;
-  static const Color secondaryText = Color(0xFFAAAAAA);
-  static const Color tertiaryText = Color(0xFF757575);
-}
+import 'package:classcare/widgets/Colors.dart';
 
 class GenerateQuestionPaperScreen extends StatefulWidget {
   @override
@@ -36,8 +17,7 @@ class GenerateQuestionPaperScreen extends StatefulWidget {
 
 class _GenerateQuestionPaperScreenState
     extends State<GenerateQuestionPaperScreen> {
-  final TextEditingController _numQuestionsController =
-      TextEditingController();
+  final TextEditingController _numQuestionsController = TextEditingController();
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _difficultyController = TextEditingController();
   final TextEditingController _marksController = TextEditingController();
@@ -51,9 +31,10 @@ class _GenerateQuestionPaperScreenState
   }
 
   /// Fetch Questions from Gemini API
-  Future<String> fetchQuestionsFromGemini(
-      int numQuestions, String topic, String difficulty, String marks, String description) async {
-    const apiKey = 'AIzaSyCgK2Vlkv-aArK2a0wPusEewhx5WWk-oPU'; // Replace with your Gemini API Key
+  Future<String> fetchQuestionsFromGemini(int numQuestions, String topic,
+      String difficulty, String marks, String description) async {
+    const apiKey =
+        'AIzaSyCgK2Vlkv-aArK2a0wPusEewhx5WWk-oPU'; // Replace with your Gemini API Key
     const url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
@@ -118,7 +99,10 @@ class _GenerateQuestionPaperScreenState
       String marks = _marksController.text.trim();
       String description = _descriptionController.text.trim();
 
-      if (numQuestions <= 0 || topic.isEmpty || difficulty.isEmpty || marks.isEmpty) {
+      if (numQuestions <= 0 ||
+          topic.isEmpty ||
+          difficulty.isEmpty ||
+          marks.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Please fill in all required fields!"),
@@ -161,12 +145,14 @@ class _GenerateQuestionPaperScreenState
             return [
               pw.Text(
                 "Question Paper",
-                style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
               pw.Text(
                 "Topic: $topic\nDifficulty: $difficulty\nMarks per Question: $marks",
-                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
               pw.ListView.builder(
@@ -239,7 +225,8 @@ class _GenerateQuestionPaperScreenState
       decoration: BoxDecoration(
         color: AppColors.surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accentBlue.withOpacity(0.3), width: 1),
+        border:
+            Border.all(color: AppColors.accentBlue.withOpacity(0.3), width: 1),
       ),
       child: TextField(
         controller: controller,
@@ -260,9 +247,8 @@ class _GenerateQuestionPaperScreenState
           focusedBorder: InputBorder.none,
           enabledBorder: InputBorder.none,
           suffixIcon: isOptional
-              ? Icon(Icons.info_outline, 
-                 color: AppColors.tertiaryText,
-                 size: 18)
+              ? Icon(Icons.info_outline,
+                  color: AppColors.tertiaryText, size: 18)
               : null,
         ),
       ),
@@ -358,7 +344,7 @@ class _GenerateQuestionPaperScreenState
                     ],
                   ),
                 ),
-                
+
                 // Form Fields Container
                 Container(
                   padding: EdgeInsets.all(20),
@@ -378,7 +364,7 @@ class _GenerateQuestionPaperScreenState
                         ),
                       ),
                       SizedBox(height: 16),
-                      
+
                       // Styled Text Fields
                       _buildStyledTextField(
                         controller: _numQuestionsController,
@@ -406,9 +392,9 @@ class _GenerateQuestionPaperScreenState
                     ],
                   ),
                 ),
-                
+
                 SizedBox(height: 20),
-                
+
                 // Generate Button
                 Container(
                   width: double.infinity,
@@ -434,7 +420,8 @@ class _GenerateQuestionPaperScreenState
                         )
                       : ElevatedButton.icon(
                           onPressed: generateAndSavePdf,
-                          icon: Icon(Icons.create_new_folder_outlined, color: AppColors.background),
+                          icon: Icon(Icons.create_new_folder_outlined,
+                              color: AppColors.background),
                           label: Text(
                             'Generate Question Paper',
                             style: TextStyle(
@@ -454,9 +441,9 @@ class _GenerateQuestionPaperScreenState
                           ),
                         ),
                 ),
-                
+
                 SizedBox(height: 16),
-                
+
                 // Tip Section
                 Container(
                   padding: EdgeInsets.all(16),

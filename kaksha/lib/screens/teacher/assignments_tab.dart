@@ -2,25 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:classcare/widgets/teacher_assignment_list.dart';
 import 'package:classcare/widgets/assignment_upload_widget.dart';
 
-// Using the same AppColors class from ClassDetailPage for consistency
-class AppColors {
-  // Base colors
-  static const Color background = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-  
-  // Subtle accent colors
-  static const Color accentBlue = Color.fromARGB(255, 124, 197, 231);
-  static const Color accentGreen = Color(0xFF8FBCBB);
-  static const Color accentPurple = Color(0xFFB48EAD);
-  static const Color accentYellow = Color(0xFFEBCB8B);
-  static const Color accentRed = Color(0xFFBF616A);
-  
-  // Text colors
-  static const Color primaryText = Colors.white;
-  static const Color secondaryText = Color(0xFFAAAAAA);
-  static const Color tertiaryText = Color(0xFF757575);
-}
+import 'package:classcare/widgets/Colors.dart';
 
 class AssignmentsTab extends StatefulWidget {
   final String classId;
@@ -40,7 +22,7 @@ class _AssignmentsTabState extends State<AssignmentsTab>
   void initState() {
     super.initState();
     _assignmentTabController = TabController(length: 2, vsync: this);
-    
+
     // Add listener to update state when tab changes
     _assignmentTabController.addListener(() {
       if (!_assignmentTabController.indexIsChanging) {
@@ -71,7 +53,6 @@ class _AssignmentsTabState extends State<AssignmentsTab>
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          
           // Custom boxed tab bar for assignments
           Container(
             margin: EdgeInsets.only(bottom: 12),
@@ -88,12 +69,14 @@ class _AssignmentsTabState extends State<AssignmentsTab>
                     onTap: () => _selectAssignmentTab(0),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: _currentAssignmentTab == 0 
-                            ? AppColors.cardColor 
+                        color: _currentAssignmentTab == 0
+                            ? AppColors.cardColor
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: _currentAssignmentTab == 0
-                            ? Border.all(color: AppColors.accentBlue.withOpacity(0.5), width: 1)
+                            ? Border.all(
+                                color: AppColors.accentBlue.withOpacity(0.5),
+                                width: 1)
                             : null,
                       ),
                       child: Center(
@@ -111,19 +94,21 @@ class _AssignmentsTabState extends State<AssignmentsTab>
                     ),
                   ),
                 ),
-                
+
                 // Past Assignments Tab
                 Expanded(
                   child: GestureDetector(
                     onTap: () => _selectAssignmentTab(1),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: _currentAssignmentTab == 1 
-                            ? AppColors.cardColor 
+                        color: _currentAssignmentTab == 1
+                            ? AppColors.cardColor
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: _currentAssignmentTab == 1
-                            ? Border.all(color: AppColors.accentBlue.withOpacity(0.5), width: 1)
+                            ? Border.all(
+                                color: AppColors.accentBlue.withOpacity(0.5),
+                                width: 1)
                             : null,
                       ),
                       child: Center(
@@ -144,7 +129,7 @@ class _AssignmentsTabState extends State<AssignmentsTab>
               ],
             ),
           ),
-          
+
           // Assignment list content
           Expanded(
             child: Container(
@@ -162,7 +147,7 @@ class _AssignmentsTabState extends State<AssignmentsTab>
               ),
             ),
           ),
-          
+
           // Upload assignment button
           Container(
             margin: EdgeInsets.only(top: 16),

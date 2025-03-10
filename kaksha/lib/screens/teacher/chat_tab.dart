@@ -1,26 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-// Using the same AppColors class for consistency
-class AppColors {
-  // Base colors
-  static const Color background = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-  
-  // Subtle accent colors
-  static const Color accentBlue = Color.fromARGB(255, 124, 197, 231);
-  static const Color accentGreen = Color(0xFF8FBCBB);
-  static const Color accentPurple = Color(0xFFB48EAD);
-  static const Color accentYellow = Color(0xFFEBCB8B);
-  static const Color accentRed = Color(0xFFBF616A);
-  
-  // Text colors
-  static const Color primaryText = Colors.white;
-  static const Color secondaryText = Color(0xFFAAAAAA);
-  static const Color tertiaryText = Color(0xFF757575);
-}
+import 'package:classcare/widgets/Colors.dart';
 
 class ChatTab extends StatefulWidget {
   final String classId;
@@ -64,7 +45,6 @@ class _ChatTabState extends State<ChatTab> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          
           // Chat messages area
           Expanded(
             child: Container(
@@ -89,7 +69,7 @@ class _ChatTabState extends State<ChatTab> {
                     );
                   }
                   var messages = snapshot.data!.docs;
-                  
+
                   if (messages.isEmpty) {
                     return Center(
                       child: Column(
@@ -120,7 +100,7 @@ class _ChatTabState extends State<ChatTab> {
                       ),
                     );
                   }
-                  
+
                   return ListView.builder(
                     controller: _scrollController,
                     reverse: true, // Show latest message at the bottom
@@ -138,7 +118,8 @@ class _ChatTabState extends State<ChatTab> {
                       bool showSenderName = true;
                       if (index < messages.length - 1) {
                         var previousMessage = messages[index + 1];
-                        String previousSenderId = previousMessage['senderId'] ?? '';
+                        String previousSenderId =
+                            previousMessage['senderId'] ?? '';
                         // Only show name if this is a different sender from the previous message
                         // (Remember the list is in reverse order due to 'reverse: true')
                         if (currentSenderId == previousSenderId) {
@@ -158,7 +139,7 @@ class _ChatTabState extends State<ChatTab> {
               ),
             ),
           ),
-          
+
           // Message input area
           Container(
             margin: EdgeInsets.only(top: 16),
@@ -208,7 +189,7 @@ class _ChatTabState extends State<ChatTab> {
       ),
     );
   }
-  
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -236,7 +217,8 @@ class ChatBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           // Only show the sender name if showSenderName is true
           if (showSenderName)
@@ -268,21 +250,21 @@ class ChatBubble extends StatelessWidget {
             ),
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
             decoration: BoxDecoration(
-              color: isMe 
-                ? AppColors.accentBlue.withOpacity(0.8) 
-                : AppColors.cardColor,
+              color: isMe
+                  ? AppColors.accentBlue.withOpacity(0.8)
+                  : AppColors.cardColor,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
                 bottomLeft: Radius.circular(isMe ? 16 : 4),
                 bottomRight: Radius.circular(isMe ? 4 : 16),
               ),
-              border: isMe 
-                ? null 
-                : Border.all(
-                    color: AppColors.surfaceColor,
-                    width: 1,
-                  ),
+              border: isMe
+                  ? null
+                  : Border.all(
+                      color: AppColors.surfaceColor,
+                      width: 1,
+                    ),
             ),
             child: Text(
               message,

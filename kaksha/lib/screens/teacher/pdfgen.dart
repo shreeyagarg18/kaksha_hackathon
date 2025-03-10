@@ -7,26 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:open_file/open_file.dart';
-
-// Adding the AppColors class to match the class details screen styling
-class AppColors {
-  // Base colors
-  static const Color background = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-
-  // Subtle accent colors
-  static const Color accentBlue = Color(0xFF81A1C1);
-  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
-  static const Color accentPurple = Color(0xFFB48EAD);
-  static const Color accentYellow = Color(0xFFEBCB8B);
-  static const Color accentRed = Color(0xFFBF616A);
-
-  // Text colors
-  static const Color primaryText = Colors.white;
-  static const Color secondaryText = Color(0xFFAAAAAA);
-  static const Color tertiaryText = Color(0xFF757575);
-}
+import 'package:classcare/widgets/Colors.dart';
 
 class GeneratePdfScreen extends StatefulWidget {
   @override
@@ -45,7 +26,8 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
 
   /// Fetch Content from Gemini API
   Future<String> fetchContentFromGemini(String topic) async {
-    const apiKey = 'AIzaSyCgK2Vlkv-aArK2a0wPusEewhx5WWk-oPU'; // Replace with your Gemini API Key
+    const apiKey =
+        'AIzaSyCgK2Vlkv-aArK2a0wPusEewhx5WWk-oPU'; // Replace with your Gemini API Key
     const url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
@@ -385,8 +367,9 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _isLoading ? AppColors.accentBlue.withOpacity(0.7) : AppColors.accentBlue,
+                  backgroundColor: _isLoading
+                      ? AppColors.accentBlue.withOpacity(0.7)
+                      : AppColors.accentBlue,
                   foregroundColor: AppColors.background,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -452,7 +435,6 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
               ),
 
             // Additional tips card
-            
           ],
         ),
       ),

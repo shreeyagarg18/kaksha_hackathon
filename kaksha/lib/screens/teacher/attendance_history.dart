@@ -2,25 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-// Matching color palette with TakeAttendancePage
-class AppColors {
-  // Base colors
-  static const Color background = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-
-  // Subtle accent colors
-  static const Color accentBlue = Color(0xFF81A1C1);
-  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
-  static const Color accentPurple = Color(0xFFB48EAD);
-  static const Color accentYellow = Color(0xFFEBCB8B);
-  static const Color accentRed = Color(0xFFBF616A);
-
-  // Text colors
-  static const Color primaryText = Colors.white;
-  static const Color secondaryText = Color(0xFFAAAAAA);
-  static const Color tertiaryText = Color(0xFF757575);
-}
+import 'package:classcare/widgets/Colors.dart';
 
 class AttendanceHistory extends StatefulWidget {
   final String classId;
@@ -70,16 +52,17 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
         final day = int.parse(parts[0]);
         final month = int.parse(parts[1]);
         final year = int.parse(parts[2]);
-        
+
         final date = DateTime(year, month, day);
-        return DateFormat.yMMMMd().format(date); // Returns "January 12, 2023" format
+        return DateFormat.yMMMMd()
+            .format(date); // Returns "January 12, 2023" format
       }
     } catch (e) {
       print("Error parsing date: $e");
     }
     return dateStr; // Return original if parsing fails
   }
-  
+
   // Count total students for a date
   int countStudents(Map<String, dynamic> dateData) {
     return dateData.length;
@@ -186,26 +169,27 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                   ),
                   Spacer(),
                   StreamBuilder<Map<String, dynamic>>(
-                    stream: fetchAttendanceHistory(),
-                    builder: (context, snapshot) {
-                      final int totalDates = snapshot.hasData ? snapshot.data!.length : 0;
-                      return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentBlue.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          "$totalDates Days",
-                          style: TextStyle(
-                            color: AppColors.accentBlue,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                      stream: fetchAttendanceHistory(),
+                      builder: (context, snapshot) {
+                        final int totalDates =
+                            snapshot.hasData ? snapshot.data!.length : 0;
+                        return Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentBlue.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                      );
-                    }
-                  ),
+                          child: Text(
+                            "$totalDates Days",
+                            style: TextStyle(
+                              color: AppColors.accentBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      }),
                 ],
               ),
             ),
@@ -222,7 +206,7 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                       ),
                     );
                   }
-                  
+
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return Center(
                       child: Column(
@@ -275,10 +259,11 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                     padding: EdgeInsets.all(16),
                     itemBuilder: (context, index) {
                       final date = sortedDates[index];
-                      final dateData = attendanceData[date] as Map<String, dynamic>;
+                      final dateData =
+                          attendanceData[date] as Map<String, dynamic>;
                       final isSelected = selectedDate == date;
                       final studentCount = countStudents(dateData);
-                      
+
                       return Column(
                         children: [
                           Container(
@@ -287,8 +272,8 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                               color: AppColors.cardColor,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: isSelected 
-                                    ? AppColors.accentBlue 
+                                color: isSelected
+                                    ? AppColors.accentBlue
                                     : AppColors.cardColor,
                                 width: 1,
                               ),
@@ -304,7 +289,8 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                                     selectedDate = expanded ? date : null;
                                   });
                                 },
-                                tilePadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                tilePadding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
@@ -314,7 +300,8 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                                 leading: Container(
                                   padding: EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentPurple.withOpacity(0.2),
+                                    color:
+                                        AppColors.accentPurple.withOpacity(0.2),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -339,9 +326,11 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                                   ),
                                 ),
                                 trailing: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentGreen.withOpacity(0.2),
+                                    color:
+                                        AppColors.accentGreen.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -357,30 +346,35 @@ class _AttendanceHistoryState extends State<AttendanceHistory> {
                                   // Extract student information from complex keys
                                   final String entryKey = entry.key;
                                   final studentData = entry.value;
-                                  
+
                                   if (studentData is! Map<String, dynamic>) {
                                     return SizedBox.shrink();
                                   }
-                                  
-                                  final studentName = studentData['name'] ?? 'Unknown';
-                                  final attendanceTime = studentData['time'] ?? 'N/A';
-                                  
+
+                                  final studentName =
+                                      studentData['name'] ?? 'Unknown';
+                                  final attendanceTime =
+                                      studentData['time'] ?? 'N/A';
+
                                   return Container(
                                     margin: EdgeInsets.fromLTRB(16, 0, 16, 8),
                                     decoration: BoxDecoration(
                                       color: AppColors.surfaceColor,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: AppColors.accentGreen.withOpacity(0.2),
+                                        color: AppColors.accentGreen
+                                            .withOpacity(0.2),
                                         width: 1,
                                       ),
                                     ),
                                     child: ListTile(
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 4),
                                       leading: Container(
                                         padding: EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: AppColors.accentGreen.withOpacity(0.2),
+                                          color: AppColors.accentGreen
+                                              .withOpacity(0.2),
                                           shape: BoxShape.circle,
                                         ),
                                         child: Icon(
