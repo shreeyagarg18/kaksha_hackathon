@@ -68,7 +68,7 @@ In today’s fast-paced world, educators are burdened with numerous tasks rangin
     </td>
     <td style="text-align: center;">
       <img src="https://imgur.com/FIFg6Up.gif" alt="Image 2" style="height:80%; width: 80%;">
-      <p>Take Attendance</p>
+      <p>Dummy</p>
     </td>
   </tr>
 </table>
@@ -84,11 +84,11 @@ In today’s fast-paced world, educators are burdened with numerous tasks rangin
     </td>
     <td style="text-align: center;">
       <img src="https://imgur.com/FIFg6Up.gif" alt="Image 2" style="height:80%; width: 80%;">
-      <p>Take Attendance</p>
+      <p>Dummy</p>
     </td>
     <td style="text-align: center;">
       <img src="https://imgur.com/FIFg6Up.gif" alt="Image 2" style="height:80%; width: 80%;">
-      <p>Take Attendance</p>
+      <p>Dummy</p>
     </td>
   </tr>
 </table>
