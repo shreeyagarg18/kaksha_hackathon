@@ -55,6 +55,19 @@ In today’s fast-paced world, educators are burdened with numerous tasks rangin
   - Reduces time and effort spent on preparing exams manually.
 
 ---
+<table style="width: 80%;">
+  <tr>
+    <td style="text-align: center;">
+      <img src="https://imgur.com/W8B3q7C.gif" alt="Image 2" style="height:80%; width: 80%;">
+      <p>Class Features</p>
+    </td>
+    <td style="text-align: center;">
+      <img src="https://imgur.com/FIFg6Up.gif" alt="Image 2" style="height:80%; width: 80%;">
+      <p>Take Attendance</p>
+    </td>
+  </tr>
+</table>
+---
 
 ## 🛠️ **Tech Stack**  
 - **Frontend:** Flutter, Dart  
