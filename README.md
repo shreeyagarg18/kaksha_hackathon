@@ -3,7 +3,7 @@
 
 <div style="display: flex;">
   
-  <img src="https://imgur.com/a/gR6obs6" alt="Kaksha Logo" width="310" height="244">
+  <img src="https://i.imgur.com/CZvbxMW.png" alt="Kaksha Logo" width="310" height="244">
 
 </div>
 
