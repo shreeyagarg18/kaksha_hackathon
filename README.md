@@ -62,6 +62,10 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
         <img src="https://imgur.com/FIFg6Up.gif" alt="Take Attendance" width="250"><br>
         <b>Take Attendance</b>
       </td>
+       <td align="center">
+        <img src="https://imgur.com/wxkLS6L" alt="Take Attendance" width="250"><br>
+        <b>Pdf and question paper generation</b>
+      </td>
     </tr>
   </table>
 </div>
