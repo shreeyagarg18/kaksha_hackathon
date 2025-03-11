@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf_render/pdf_render.dart';
@@ -69,9 +70,9 @@ class PDFUploadService {
     //print("Second Half Images: $secondHalf");
 
     Future<String> firstHalfText = _processImageBatch(
-        firstHalf, "AIzaSyAiH173s0PPDFWNtJpcuzPLdu3i_0mi8Ao", "API_1");
+        firstHalf, dotenv.env['API_KEY_1']!, "API_1");
     Future<String> secondHalfText = _processImageBatch(
-        secondHalf, "AIzaSyB4mpffbJQfgCzdBX_z6dELHqSRI0hvg_I", "API_2");
+        secondHalf, dotenv.env['API_KEY_2']!, "API_2");
 
     List<String> results = await Future.wait([firstHalfText, secondHalfText]);
 
@@ -137,8 +138,8 @@ class PDFUploadService {
 
   Future<String> sendToGeminiAPI(
       String assignmentText, String rubricText, String studentText) async {
-    const apiKey = 'AIzaSyDONNPmqMxTQ2gHdUvRdgAZPNKz_1c1YpQ';
-    const url =
+    var apiKey =dotenv.env['API_KEY_3'] ;
+    var url =
         'https://generativelanguage.googleapis.com/v1beta/tunedModels/copy-of-analysis-model-pq5mo65ip7q1:generateContent?key=$apiKey';
 
     String prompt = '''

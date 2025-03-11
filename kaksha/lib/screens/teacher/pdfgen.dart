@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -26,9 +27,9 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
 
   /// Fetch Content from Gemini API
   Future<String> fetchContentFromGemini(String topic) async {
-    const apiKey =
-        'AIzaSyCgK2Vlkv-aArK2a0wPusEewhx5WWk-oPU'; // Replace with your Gemini API Key
-    const url =
+    var apiKey =
+        dotenv.env['API_KEY_4']!; // Replace with your Gemini API Key
+    var url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
     String prompt =
