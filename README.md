@@ -59,7 +59,7 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
         <b>Class Features</b>
       </td>
       <td align="center">
-        <img src="https://imgur.com/FIFg6Up.gif" alt="Take Attendance" width="250"><br>
+        <img src="https://imgur.com/uKiF7kG.gif" alt="Take Attendance" width="250"><br>
         <b>Take Attendance</b>
       </td>
        <td align="center">
@@ -75,7 +75,7 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
   <table>
     <tr>
       <td align="center">
-        <img src="https://imgur.com/lGwd6xF.gif" alt="Student Class View" width="250"><br>
+        <img src="https://imgur.com/uKiF7kG.gif" alt="Student Class View" width="250"><br>
         <b>Class Features</b>
       </td>
     </tr>
