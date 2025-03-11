@@ -1,128 +1,129 @@
-# 📚 Kaksha: Revolutionizing Classroom Management 📚  
-**Effortlessly Manage Classes and Reduce Teachers' Workload!**  
+# 📚 Kaksha: Revolutionizing Classroom Management 📚
 
-<div style="display: flex;">
-  
-  <img src="https://i.imgur.com/CZvbxMW.png" alt="Kaksha Logo" width="310" height="244">
+**Effortlessly Manage Classes and Reduce Teachers' Workload**
 
+<div align="center">
+  <img src="https://i.imgur.com/CZvbxMW.png" alt="Kaksha Logo" width="310">
 </div>
 
----
+## 🚀 Overview
 
-## 🚀 **Overview**  
 Kaksha is an all-in-one classroom management solution designed to significantly reduce the administrative workload for teachers while providing a seamless and engaging educational experience for students. The name "Kaksha" (कक्षा) means "classroom" in Hindi, embodying our mission to transform traditional classrooms into smart, efficient, and interactive learning environments.
 
-In today’s fast-paced world, educators are burdened with numerous tasks ranging from managing assignments and attendance to providing personalized feedback. Kaksha addresses these challenges by integrating advanced technologies like AI, Bluetooth-based attendance systems, and automated grading, making teaching more focused, efficient, and less stressful.
+In today's fast-paced world, educators are burdened with numerous tasks ranging from managing assignments and attendance to providing personalized feedback. Kaksha addresses these challenges by integrating advanced technologies like AI, Bluetooth-based attendance systems, and automated grading, making teaching more focused, efficient, and less stressful.
 
----
+## ✨ Key Features
 
+### 🏫 Class Management
+- **Intuitive Class Creation**: Teachers can create unlimited virtual classrooms with customizable settings
+- **Secure Enrollment System**: Students join via unique class codes or direct invitations
+- **Comprehensive Dashboard**: Bird's-eye view of all class activities, assignments, and student engagement metrics
+- **Student Directory**: Detailed profiles with performance analytics and engagement history
 
-## ✨ **Features**  
+### 📋 Assignments
+- **Upload and Submit Assignments**: Teachers can upload assignments with due dates, and students can submit their work directly through the app
+- **Automated Grading with AI**:
+  - Instant evaluation using Google Vision API and Gemini API with a single click
+  - Detailed feedback and preliminary scores based on content quality and relevance
+  - Editable scores for teacher review before publishing
+  - Comprehensive feedback for students to identify areas for improvement
 
-### 🏫 **Class Management**  
-- **Intuitive Class Creation** : Teachers can create unlimited virtual classrooms with customizable settings
-- **Secure Enrollment System** : Students join via unique class codes or direct invitations
-- **Comprehensive Dashboard** : Bird's-eye view of all class activities, assignments, and student engagement metrics
-- **Student Directory** : Detailed profiles with performance analytics and engagement history
+### 🗣️ Class Chat
+- **Real-time Communication**: Collaborative environment for teachers and students to interact and clarify doubts
 
-### 📋 **Assignments**  
-- Upload and Submit Assignments:
-  Teachers can upload assignments with due dates, and students can submit their work directly through the app.
-- Automated Grading with AI:
-  - With a single click on the Analyze button, assignments are evaluated using the Google Vision API and Gemini API.
-  - The AI-powered analysis provides detailed feedback and preliminary scores based on content quality and relevance.
-  - Editable Scores: Teachers can review and adjust marks before they are made visible to students.
-  - Students can view their grades and AI-generated feedback to understand areas of improvement.
+### 📅 Smart Attendance System
+- **Bluetooth-based Attendance**:
+  - Automated attendance marking using Bluetooth technology
+  - Eliminates manual roll calls and saves valuable class time
+- **Attendance Analytics**:
+  - Detailed historical attendance reports with date filtering
+  - Visualization of attendance patterns and trends for each student
 
-### 🗣️ **Class Chat**  
-- **Real-time chat** for both teachers and students to collaborate and clarify doubts.  
+### 🤖 AI-Powered Tools
+- **PDF Generator**:
+  - Create comprehensive study materials on any topic with a simple prompt
+  - Well-structured and easy-to-understand content for better learning
+- **Question Paper Generator**:
+  - Specify topic, description, number of questions, and marks distribution
+  - Generate balanced assessments across different difficulty levels
+  - Significantly reduce time spent on exam preparation
 
-### 📅 **Smart Attendance System**  
-- **Bluetooth-based attendance:**  
-  - Utilizes Bluetooth technology to automate attendance marking.
-  - When students enable Bluetooth on their devices, the teacher's app detects them and marks them present—eliminating manual attendance and saving valuable class time.
-- **Attendance history:**  
-  - Allows teachers to access detailed attendance reports filtered by dates.
-  - Facilitates quick review of attendance patterns and trends for each student.
+## 📱 Application Showcase
 
-### 🤖 **AI-Powered Tools**  
-- **PDF Generator:**  
-  - Teachers can create comprehensive PDFs on any topic by providing a simple prompt.
-  - Ensures that study materials are well-structured and easy to understand. 
-- **Question Paper Generator:**  
-  - Allows teachers to specify topic, description, number of questions, and marks distribution.
-  - Generates balanced question papers that assess students effectively across different difficulty levels.
-  - Reduces time and effort spent on preparing exams manually.
+### Teacher Interface
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://imgur.com/wjxaanc.gif" alt="Class Features" width="250"><br>
+        <b>Class Features</b>
+      </td>
+      <td align="center">
+        <img src="https://imgur.com/FIFg6Up.gif" alt="Take Attendance" width="250"><br>
+        <b>Take Attendance</b>
+      </td>
+    </tr>
+  </table>
+</div>
 
----
-<table style="width: 80%;">
-  <tr>
-    <td style="text-align: center;">
-      <img src="https://imgur.com/W8B3q7C.gif" alt="Image 2" style="height:80%; width: 80%;">
-      <p>Class Features</p>
-    </td>
-    <td style="text-align: center;">
-      <img src="https://imgur.com/FIFg6Up.gif" alt="Image 2" style="height:80%; width: 80%;">
-      <p>Take Attendance</p>
-    </td>
-  </tr>
-</table>
----
+### Student Interface
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://imgur.com/lGwd6xF.gif" alt="Student Class View" width="250"><br>
+        <b>Class Features</b>
+      </td>
+    </tr>
+  </table>
+</div>
 
-## 🛠️ **Tech Stack**  
-- **Frontend:** Flutter, Dart  
-- **Backend:** Firebase (Firestore, Authentication, Storage)  
-- **APIs:**  
-  - Google Vision API for OCR and analysis.  
-  - Gemini API for assignment grading and insights.  
-- **Bluetooth Integration:** Flutter Blue package for attendance.  
+## 🛠️ Tech Stack
+- **Frontend**: Flutter, Dart
+- **Backend**: Firebase (Firestore, Authentication, Storage)
+- **APIs**:
+  - Google Vision API for OCR and analysis
+  - Gemini API for assignment grading and insights
+- **Bluetooth Integration**: Flutter Blue package for attendance
 
----
+## 🚀 Getting Started
 
-## 🏃‍♀️ Getting Started
-
-<hr>
-
-Download Femunity directly from our [GitHub repository](https://github.com/drowsy-coder/femunity). After downloading the app, you can sign up for an account using your Google account or use Guest Mode to explore the app.
-
-### 📝 Prerequisites
-
-Before you start, make sure you have installed the following on your system:
-
+### Prerequisites
 - Flutter SDK
-- VS Code
-- Dart and Flutter extensions for VS Code
+- VS Code or Android Studio
+- Dart and Flutter extensions for your IDE
 - Android emulator or physical device
 
-### 🛠️ Installation
+### Installation
 
-1. Clone the Femunity repository from GitHub: https://github.com/drowsy-coder/femunity.git
+1. Clone the repository:
+  ```bash
+    git clone https://github.com/Weirdo2004/ConsumeWise
+  ```
+2. Navigate to the project directory:
+  ```bash
+    cd classcare
+  ```
+3. Install dependencies:
+  ```bash
+    flutter pub get
+  ```
+4. Run the application:
+  ```bash
+    flutter run
+  ```
+<hr>
 
-2. Open the project folder in VS Code.
-
-3. In VS Code, open the command palette (View > Command Palette) and type "Flutter: Run Flutter Doctor". This will check your system to make sure everything is set up correctly.
-
-4. In VS Code, open the main.dart file and click the "Run" button. This will launch the app in the emulator or on your physical device.
+### 👥 Team
+1. Laksh R Jain
+2. Atman Pattanaik
+3. Anushri Maheswari
+4. Shreeya Garg
 
 <hr>
 
-## Setup:
-
-### For running it locally
-
-```bash
-git clone https://github.com/Weirdo2004/ConsumeWise
-```
-```bash
-cd classcare
-```
-```bash
-flutter pub get
-```
-```bash
-flutter run
-```
-<hr>
-
+<div align="center">
+  <p>Made with ❤️ by Team Kaksha</p>
+</div>
 
   
