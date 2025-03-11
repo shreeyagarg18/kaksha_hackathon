@@ -1,4 +1,5 @@
 import 'package:classcare/screens/student/attendance_screen.dart';
+import 'package:classcare/screens/teacher/students_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -50,7 +51,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
 
     // Add listener to update state when tab changes
     _tabController.addListener(() {
@@ -297,7 +298,6 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
               ),
               child: Row(
                 children: [
-                  // Assignments Tab
                   Expanded(
                     child: GestureDetector(
                       onTap: () => _selectTab(0),
@@ -325,9 +325,51 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
                             ),
                             SizedBox(height: 4),
                             Text(
-                              "Assignments",
+                              "Student List",
                               style: TextStyle(
                                 color: _currentIndex == 0
+                                    ? AppColors.accentBlue
+                                    : AppColors.secondaryText,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Assignments Tab
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _selectTab(1),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _currentIndex == 1
+                              ? AppColors.cardColor
+                              : const Color.fromARGB(0, 28, 24, 24),
+                          borderRadius: BorderRadius.circular(20),
+                          border: _currentIndex == 1
+                              ? Border.all(
+                                  color: AppColors.accentBlue.withOpacity(0.5),
+                                  width: 1)
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.assignment_outlined,
+                              color: _currentIndex == 1
+                                  ? AppColors.accentBlue
+                                  : AppColors.secondaryText,
+                              size: 20,
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Assignments",
+                              style: TextStyle(
+                                color: _currentIndex == 1
                                     ? AppColors.accentBlue
                                     : AppColors.secondaryText,
                                 fontSize: 12,
@@ -343,14 +385,14 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
                   // Chat Tab
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => _selectTab(1),
+                      onTap: () => _selectTab(2),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _currentIndex == 1
+                          color: _currentIndex == 2
                               ? AppColors.cardColor
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(20),
-                          border: _currentIndex == 1
+                          border: _currentIndex == 2
                               ? Border.all(
                                   color: AppColors.accentBlue.withOpacity(0.5),
                                   width: 1)
@@ -361,7 +403,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
                           children: [
                             Icon(
                               Icons.chat_bubble_outline,
-                              color: _currentIndex == 1
+                              color: _currentIndex == 2
                                   ? AppColors.accentBlue
                                   : AppColors.secondaryText,
                               size: 20,
@@ -370,7 +412,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
                             Text(
                               "Chat",
                               style: TextStyle(
-                                color: _currentIndex == 1
+                                color: _currentIndex == 2
                                     ? AppColors.accentBlue
                                     : AppColors.secondaryText,
                                 fontSize: 12,
@@ -399,6 +441,7 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
+                    StudentsList(classId: widget.classId),
                     AssignmentList(classId: widget.classId),
                     ChatTab(classId: widget.classId),
                   ],

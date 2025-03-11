@@ -527,7 +527,7 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    StudentsList(classId: widget.classId),
+                    StudentsList(classId: widget.classId),  
                     AssignmentsTab(classId: widget.classId),
                     ChatTab(classId: widget.classId),
                   ],
