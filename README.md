@@ -59,7 +59,7 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
         <b>Class Features</b>
       </td>
       <td align="center">
-        <img src="https://imgur.com/FIFg6Up.gif" alt="Take Attendance" width="250"><br>
+        <img src="https://imgur.com/uKiF7kG.gif" alt="Take Attendance" width="250"><br>
         <b>Take Attendance</b>
       </td>
        <td align="center">
@@ -75,7 +75,7 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
   <table>
     <tr>
       <td align="center">
-        <img src="https://imgur.com/lGwd6xF.gif" alt="Student Class View" width="250"><br>
+        <img src="https://imgur.com/uKiF7kG.gif" alt="Student Class View" width="250"><br>
         <b>Class Features</b>
       </td>
     </tr>
@@ -102,11 +102,11 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
 
 1. Clone the repository:
   ```bash
-    git clone https://github.com/Weirdo2004/ConsumeWise
+    git clone https://github.com/LakshRJain/Kaksha.git
   ```
 2. Navigate to the project directory:
   ```bash
-    cd classcare
+    cd Kaksha
   ```
 3. Install dependencies:
   ```bash
@@ -126,6 +126,9 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
 
 <hr>
 
+## 🪪 License
+
+Femunity is licensed under the MIT license. See [LICENSE.txt](LICENSE.txt) for more information.
 <div align="center">
   <p>Made with ❤️ by Team Kaksha</p>
 </div>
