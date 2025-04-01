@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -33,8 +34,8 @@ class _GenerateMCQScreenState extends State<GenerateMCQScreen> {
 
   Future<String> fetchMCQsFromGemini(
       int numQuestions, String topic, String difficulty) async {
-    const apiKey = 'AIzaSyDSzqEwTjOmoHI0YAhjrQHDHAH0ecw3zrI';
-    const url =
+    var apiKey =  dotenv.env['API_KEY_5'] ?? '';
+    var url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
     String prompt = """
