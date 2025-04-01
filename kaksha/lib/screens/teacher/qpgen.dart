@@ -35,7 +35,7 @@ class _GenerateQuestionPaperScreenState
   Future<String> fetchQuestionsFromGemini(int numQuestions, String topic,
       String difficulty, String marks, String description) async {
     var apiKey =
-        dotenv.env['API_KEY']!; // Replace with your Gemini API Key
+        dotenv.env['API_KEY_3']??''; // Replace with your Gemini API Key
     var url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
@@ -175,7 +175,7 @@ class _GenerateQuestionPaperScreenState
       );
 
       // Save PDF in Downloads folder
-      Directory? downloadsDir = Directory("/storage/emulated/0/Download");
+      Directory? downloadsDir = await getApplicationDocumentsDirectory(); 
       if (!downloadsDir.existsSync()) {
         downloadsDir = await getExternalStorageDirectory();
       }

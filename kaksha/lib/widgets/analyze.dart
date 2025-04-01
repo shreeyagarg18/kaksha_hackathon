@@ -69,10 +69,10 @@ class PDFUploadService {
     //print("First Half Images: $firstHalf");
     //print("Second Half Images: $secondHalf");
 
-    Future<String> firstHalfText = _processImageBatch(
-        firstHalf, dotenv.env['API_KEY_1']!, "API_1");
+    Future<String> firstHalfText = _processImageBatch(  
+    firstHalf, dotenv.env['API_KEY_1'] ?? '', "API_1");
     Future<String> secondHalfText = _processImageBatch(
-        secondHalf, dotenv.env['API_KEY_2']!, "API_2");
+        secondHalf, dotenv.env['API_KEY_2']??'', "API_2");
 
     List<String> results = await Future.wait([firstHalfText, secondHalfText]);
 

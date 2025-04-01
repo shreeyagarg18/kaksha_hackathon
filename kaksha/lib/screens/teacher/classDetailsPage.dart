@@ -8,7 +8,7 @@ import 'package:classcare/screens/teacher/assignments_tab.dart';
 import 'package:classcare/screens/teacher/chat_tab.dart';
 import 'package:flutter/services.dart';
 import 'package:classcare/screens/teacher/take_attendance_page.dart';
-
+import 'package:classcare/screens/teacher/quiz_generate.dart';
 // Refined color palette with subtle tones
 class AppColors {
   // come ill show you cme ikk shiw you the appwha
@@ -316,6 +316,18 @@ class _ClassDetailPageState extends State<ClassDetailPage>
                       context,
                       MaterialPageRoute(
                           builder: (context) => GeneratePdfScreen()));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.quiz,
+                    color: AppColors.accentYellow),
+                title: Text("Quiz",
+                    style: TextStyle(color: AppColors.primaryText)),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => quiz_generate(classId: widget.classId,)));
                 },
               ),
             ],

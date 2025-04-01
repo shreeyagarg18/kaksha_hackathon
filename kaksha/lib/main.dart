@@ -11,29 +11,50 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
  
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
+
+  print("Loading .env...");
+    // Load .env file from assets folder
+  await dotenv.load(fileName: "assets/.env");
+
+  print("Loaded .env");
+
+  print("Requesting storage permission...");
   await Permission.storage.request();
+  print("Permission granted");
+
+  print("Initializing Firebase...");
   await Firebase.initializeApp();
+  print("Firebase initialized");
+
+  print("Activating Firebase App Check...");
   await FirebaseAppCheck.instance.activate(
     androidProvider: AndroidProvider.debug,
     appleProvider: AppleProvider.debug,
   );
-  
-  User? currentUser = FirebaseAuth.instance.currentUser;
+  print("Firebase App Check activated");
 
-  // Check user role if logged in
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  print("Checking user authentication...");
+  
   Widget initialScreen = const Start();
   if (currentUser != null) {
+    print("User logged in: ${currentUser.uid}");
     String? role = await getUserRole(currentUser.uid);
+    print("User role: $role");
+
     if (role == 'Student') {
       initialScreen = const homeStudent();
     } else if (role == 'Teacher') {
       initialScreen = const TeacherDashboard();
     }
+  } else {
+    print("No user logged in.");
   }
 
+  print("Launching app...");
   runApp(MyApp(initialScreen: initialScreen));
 }
+
 
 Future<String?> getUserRole(String userId) async {
   try {

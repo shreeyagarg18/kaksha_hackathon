@@ -7,7 +7,7 @@ import 'package:classcare/screens/student/assignment_list.dart';
 import 'package:classcare/screens/teacher/chat_tab.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'dart:io';
+import 'package:classcare/screens/student/studentQuiz.dart';
 
 // Refined color palette with subtle tones - copied from the first file
 class AppColors {
@@ -211,13 +211,52 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
             ),
           ),
         ),
+        drawer: Drawer(
+            backgroundColor: AppColors.surfaceColor,
+            child: ListView(padding: EdgeInsets.zero, children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.school_outlined,
+                      color: AppColors.accentBlue,
+                      size: h * 0.04,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Class Options",
+                      style: TextStyle(
+                        color: AppColors.primaryText,
+                        fontSize: h * 0.02,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.quiz, color: AppColors.accentYellow),
+                title: Text("Quiz",
+                    style: TextStyle(color: AppColors.primaryText)),
+                onTap: (){
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => Studentquiz(classId: widget.classId)));
+                },
+              ),
+            ])),
         body: Column(
           children: [
             // Class header section
             Container(
               margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
               padding: EdgeInsets.all(h * 0.018),
-              decoration: BoxDecoration( 
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     AppColors.accentBlue.withOpacity(0.2),
@@ -430,7 +469,6 @@ class _StudentClassDetailsState extends State<StudentClassDetails>
 
             // Tab content - styled to match the first file
             Expanded(
-              
               child: Container(
                 margin: EdgeInsets.fromLTRB(16, 0, 16, 16),
                 decoration: BoxDecoration(
