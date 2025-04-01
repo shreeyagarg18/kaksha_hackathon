@@ -96,11 +96,11 @@ Watch the product demo on:
 </div>
 <br>
 
-## Latest Version - v1.0.0
+## Latest Version - v1.1.0
 <table>
   <tr>
     <td>
-      <a href="https://github.com/LakshRJain/Kaksha/releases/download/v1.0.0/Kaksha_v1.0.0.apk">
+      <a href="https://github.com/LakshRJain/Kaksha/releases/tag/v1.1.0">
         <img src="https://user-images.githubusercontent.com/663460/26973090-f8fdc986-4d14-11e7-995a-e7c5e79ed925.png" alt="Github" width="200">
       </a>
     </td>
