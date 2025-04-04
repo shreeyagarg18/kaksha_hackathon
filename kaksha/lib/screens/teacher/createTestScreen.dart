@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
+import 'package:classcare/widgets/Colors.dart';
 
 class CreateTestScreen extends StatefulWidget {
   final Map<String, dynamic>? existingTest;
@@ -23,11 +24,12 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
   final List<TextEditingController> _optionControllers =
       List.generate(4, (index) => TextEditingController());
   int? _correctOption;
-  String? _existingTestId; // To store the existing test's Firestore document ID
+  String? _existingTestId;
   DateTime? _startDate;
   TimeOfDay? _startTime;
   DateTime? _endDate;
   TimeOfDay? _endTime;
+
   @override
   void dispose() {
     _testNameController.dispose();
@@ -43,37 +45,29 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
   void initState() {
     super.initState();
     if (widget.existingTest != null) {
-      _existingTestId =
-          widget.existingTest!['id']; // Store the existing test ID
+      _existingTestId = widget.existingTest!['id'];
       _testNameController.text = widget.existingTest!['name'] ?? '';
       _questions = List.from(widget.existingTest!['questions'] ?? []);
 
-      print("hiiiiii");
-
-      // Safely check and set start and end dates
       var startDateRaw = widget.existingTest!['startDateTime'];
       if (startDateRaw != null) {
-        print("date1");
         if (startDateRaw is Timestamp) {
-          _startDate = startDateRaw.toDate(); // Convert Firestore Timestamp
+          _startDate = startDateRaw.toDate();
         } else if (startDateRaw is String) {
           try {
-            _startDate = DateTime.parse(startDateRaw); // If it's an ISO string
+            _startDate = DateTime.parse(startDateRaw);
           } catch (e) {
             print("Error parsing startDateTime string: $e");
           }
         } else if (startDateRaw is DateTime) {
-          _startDate = startDateRaw; // If already converted
+          _startDate = startDateRaw;
         }
 
-        _startTime =
-            _startDate != null ? TimeOfDay.fromDateTime(_startDate!) : null;
+        _startTime = _startDate != null ? TimeOfDay.fromDateTime(_startDate!) : null;
       }
-      print("date");
 
       var endDateRaw = widget.existingTest!['endDateTime'];
       if (endDateRaw != null) {
-        print("time");
         if (endDateRaw is Timestamp) {
           _endDate = endDateRaw.toDate();
         } else if (endDateRaw is String) {
@@ -88,15 +82,10 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
 
         _endTime = _endDate != null ? TimeOfDay.fromDateTime(_endDate!) : null;
       }
-      print("time");
 
-      // Populate test duration if exists
       if (widget.existingTest!['duration'] != null) {
-        print("duration");
-        _testDurationController.text =
-            widget.existingTest!['duration'].toString();
+        _testDurationController.text = widget.existingTest!['duration'].toString();
       }
-      print("duration");
     }
   }
 
@@ -106,12 +95,40 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
       initialDate: _startDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.accentBlue,
+              onPrimary: Colors.white,
+              surface: AppColors.cardColor,
+              onSurface: AppColors.primaryText,
+            ),
+            dialogBackgroundColor: AppColors.surfaceColor,
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: _startTime ?? TimeOfDay.now(),
+        builder: (context, child) {
+          return Theme(
+            data: ThemeData.dark().copyWith(
+              colorScheme: ColorScheme.dark(
+                primary: AppColors.accentBlue,
+                onPrimary: Colors.white,
+                surface: AppColors.cardColor,
+                onSurface: AppColors.primaryText,
+              ),
+              dialogBackgroundColor: AppColors.surfaceColor,
+            ),
+            child: child!,
+          );
+        },
       );
 
       if (pickedTime != null) {
@@ -135,12 +152,40 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
       initialDate: _endDate ?? (_startDate ?? DateTime.now()),
       firstDate: _startDate ?? DateTime.now(),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.accentBlue,
+              onPrimary: Colors.white,
+              surface: AppColors.cardColor,
+              onSurface: AppColors.primaryText,
+            ),
+            dialogBackgroundColor: AppColors.surfaceColor,
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: _endTime ?? TimeOfDay.now(),
+        builder: (context, child) {
+          return Theme(
+            data: ThemeData.dark().copyWith(
+              colorScheme: ColorScheme.dark(
+                primary: AppColors.accentBlue,
+                onPrimary: Colors.white,
+                surface: AppColors.cardColor,
+                onSurface: AppColors.primaryText,
+              ),
+              dialogBackgroundColor: AppColors.surfaceColor,
+            ),
+            child: child!,
+          );
+        },
       );
 
       if (pickedTime != null) {
@@ -169,34 +214,19 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
         File file = File(result.files.single.path!);
         String csvString = await file.readAsString();
 
-        // Print raw CSV content for debugging
-        print('Raw CSV Content:\n$csvString');
-
-        // Try different parsing strategies
         List<List<dynamic>> csvTable = [];
 
         try {
-          // First, try with custom CSV converter that's more lenient
           csvTable = const CsvToListConverter(
             eol: '\n',
-            fieldDelimiter: '\t', // Change from ',' to '\t'
+            fieldDelimiter: '\t',
             textDelimiter: '"',
             shouldParseNumbers: false,
           ).convert(csvString);
-          print('CSV Content Preview:\n$csvString');
-          print('Processed Rows: ${csvTable.length}');
-          print(
-              'First Row Columns: ${csvTable.isNotEmpty ? csvTable[0].length : "Empty"}');
-
-          for (var row in csvTable) {
-            print(row);
-          }
         } catch (e) {
-          print('First parsing method failed: 🟥$e');
+          print('First parsing method failed: $e');
 
-          // Fallback: manual parsing
           csvTable = csvString.split('\n').map((line) {
-            // Use regex to split while respecting quotes
             return RegExp(r',(?=(?:[^"]"[^"]")[^"]$)')
                 .allMatches(line)
                 .map((match) => line.substring(match.start, match.end).trim())
@@ -204,19 +234,6 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
           }).toList();
         }
 
-        // Enhanced debugging for column detection
-        if (csvTable.isNotEmpty) {
-          var firstRow = csvTable[0][0].split(',');
-          print('fff');
-          print(firstRow);
-          print('Total Columns Detected: ${firstRow.length}');
-          print('Detected Columns:');
-          for (int i = 0; i < firstRow.length; i++) {
-            print('Column $i: "${firstRow[i]}"');
-          }
-        }
-
-        // Skip header row if it exists
         List<List<dynamic>> dataRows =
             csvTable.length > 1 ? csvTable.sublist(1) : csvTable;
 
@@ -224,27 +241,19 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
         List<String> skippedRowReasons = [];
 
         for (var Trow in dataRows) {
-          var row=Trow[0].split(',');
-          // Detailed logging of row length and content
-          print('Processing Row (Length: ${row.length}):');
-          for (int i = 0; i < row.length; i++) {
-            print('Column $i: "${row[i]}" (Type: ${row[i].runtimeType})');
-          }
+          var row = Trow[0].split(',');
 
-          // Ensure we have enough columns
           if (row.length < 6) {
             skippedRowReasons.add(
                 'Row skipped: Insufficient columns (found ${row.length}, expected at least 6)');
             continue;
           }
 
-          // Validate question and options are not empty
           if (row[0].toString().trim().isEmpty) {
             skippedRowReasons.add('Row skipped: Question is empty');
             continue;
           }
 
-          // Check if options are not empty
           bool anyEmptyOption = false;
           for (int i = 1; i < 5; i++) {
             if (row[i].toString().trim().isEmpty) {
@@ -255,7 +264,6 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
           }
           if (anyEmptyOption) continue;
 
-          // Find the correct option index
           String correctAnswer = row[5].toString().toLowerCase().trim();
           int correctOptionIndex = -1;
 
@@ -278,7 +286,6 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
               continue;
           }
 
-          // Create the question map
           Map<String, dynamic> question = {
             'question': row[0].toString().trim(),
             'options': [
@@ -293,12 +300,10 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
           importedQuestions.add(question);
         }
 
-        // Update state with imported questions
         setState(() {
           _questions.addAll(importedQuestions);
         });
 
-        // Prepare feedback message
         String message =
             '${importedQuestions.length} questions imported successfully';
         if (skippedRowReasons.isNotEmpty) {
@@ -308,104 +313,92 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
           }
         }
 
-        // Show success message
-        _showSnackBar(message, Colors.green);
-
-        // Print total imported questions
-        print('Total Imported Questions: ${importedQuestions.length}');
-        print('Skipped Row Reasons: $skippedRowReasons');
+        _showSnackBar(message, AppColors.accentGreen);
       }
     } catch (e) {
-      // Show error message
-      _showSnackBar('Error importing CSV: ${e.toString()}', Colors.red);
+      _showSnackBar('Error importing CSV: ${e.toString()}', AppColors.accentRed);
       print('CSV Import Error: $e');
     }
   }
 
   void _addQuestion() {
     if (_questionController.text.isNotEmpty && _correctOption != null) {
-      _questions.add({
-        'question': _questionController.text,
-        'options':
-            _optionControllers.map((controller) => controller.text).toList(),
-        'correct': _correctOption,
-      });
-      _questionController.clear();
-      for (var controller in _optionControllers) {
-        controller.clear();
-      }
       setState(() {
+        _questions.add({
+          'question': _questionController.text,
+          'options':
+              _optionControllers.map((controller) => controller.text).toList(),
+          'correct': _correctOption,
+        });
+        _questionController.clear();
+        for (var controller in _optionControllers) {
+          controller.clear();
+        }
         _correctOption = null;
       });
     } else {
       _showSnackBar(
-          'Please fill all fields and select a correct option', Colors.amber);
+          'Please fill all fields and select a correct option', AppColors.accentYellow);
     }
   }
 
   Future<void> _submitTest() async {
     if (_testNameController.text.isEmpty) {
-      _showSnackBar('Please enter a test name', Colors.amber);
+      _showSnackBar('Please enter a test name', AppColors.accentYellow);
       return;
     }
     if (_startDate == null || _endDate == null) {
-      _showSnackBar('Please select start and end date/time', Colors.amber);
+      _showSnackBar('Please select start and end date/time', AppColors.accentYellow);
       return;
     }
 
-    // Validate test duration
     if (_testDurationController.text.isEmpty) {
-      _showSnackBar('Please enter test duration in minutes', Colors.amber);
+      _showSnackBar('Please enter test duration in minutes', AppColors.accentYellow);
       return;
     }
 
-    // Validate end date is after start date
     if (_endDate!.isBefore(_startDate!)) {
-      _showSnackBar('End date must be after start date', Colors.amber);
+      _showSnackBar('End date must be after start date', AppColors.accentYellow);
       return;
     }
-    if (_questions.isNotEmpty) {
-      try {
-        // Prepare test data for Firebase
-        Map<String, dynamic> testData = {
-          'name': _testNameController.text,
-          'questions': _questions,
-          'startDateTime': Timestamp.fromDate(_startDate!),
-          'endDateTime': Timestamp.fromDate(_endDate!),
-          'duration': int.parse(_testDurationController.text),
-          'updatedAt': FieldValue.serverTimestamp(),
-        };
+    
+    if (_questions.isEmpty) {
+      _showSnackBar('Please add at least one question', AppColors.accentYellow);
+      return;
+    }
+    
+    try {
+      Map<String, dynamic> testData = {
+        'name': _testNameController.text,
+        'questions': _questions,
+        'startDateTime': Timestamp.fromDate(_startDate!),
+        'endDateTime': Timestamp.fromDate(_endDate!),
+        'duration': int.parse(_testDurationController.text),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
 
-        // Check if this is an existing test or a new test
-        if (_existingTestId != null && _existingTestId!.isNotEmpty) {
-          // Update existing test
-          await FirebaseFirestore.instance
-              .collection('classes')
-              .doc(widget.classId)
-              .collection('tests')
-              .doc(_existingTestId)
-              .update(testData);
+      if (_existingTestId != null && _existingTestId!.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('classes')
+            .doc(widget.classId)
+            .collection('tests')
+            .doc(_existingTestId)
+            .update(testData);
 
-          // Return the updated test data with the existing ID
-          testData['id'] = _existingTestId;
-        } else {
-          // Create new test
-          DocumentReference docRef = await FirebaseFirestore.instance
-              .collection('classes')
-              .doc(widget.classId)
-              .collection('tests')
-              .add(testData);
+        testData['id'] = _existingTestId;
+      } else {
+        DocumentReference docRef = await FirebaseFirestore.instance
+            .collection('classes')
+            .doc(widget.classId)
+            .collection('tests')
+            .add(testData);
 
-          // Add the new document ID to the test data
-          testData['id'] = docRef.id;
-        }
-
-        Navigator.pop(context, testData);
-      } catch (e) {
-        _showSnackBar('Error saving test: ${e.toString()}', Colors.red);
+        testData['id'] = docRef.id;
       }
-    } else {
-      _showSnackBar('Please add at least one question', Colors.amber);
+
+      Navigator.pop(context, testData);
+    } catch (e) {
+      _showSnackBar('Error saving test: ${e.toString()}', AppColors.accentRed);
     }
   }
 
@@ -413,219 +406,6 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
     setState(() {
       _questions.removeAt(index);
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Create Test',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20, // Reduced from 22
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.4, // Slightly reduced
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 12.0, vertical: 8.0), // Reduced padding
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Test Name Input
-              _buildTextField(
-                controller: _testNameController,
-                labelText: 'Test Name',
-                icon: Icons.text_fields,
-                color: Colors.blue.shade200,
-              ),
-
-              const SizedBox(height: 12), // Reduced height
-
-              // Test Duration Input
-              _buildTextField(
-                controller: _testDurationController,
-                labelText: 'Duration (minutes)',
-                icon: Icons.timer,
-                color: Colors.green.shade200,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Date and Time Selectors
-              _buildDateTimeSelector(
-                label: 'Start Date/Time',
-                icon: Icons.calendar_today,
-                color: Colors.purple.shade200,
-                dateTime: _startDate,
-                onTap: _selectStartDateTime,
-              ),
-
-              const SizedBox(height: 12),
-
-              _buildDateTimeSelector(
-                label: 'End Date/Time',
-                icon: Icons.event_available,
-                color: Colors.orange.shade200,
-                dateTime: _endDate,
-                onTap: _selectEndDateTime,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Question Container
-              _buildQuestionContainer(),
-
-              const SizedBox(height: 12),
-
-              // Action Buttons (Compact Row)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildCompactButton(
-                      text: 'Import CSV',
-                      icon: Icons.upload_file,
-                      onPressed: _importFromCSV,
-                      color: Colors.blue.shade700,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildCompactButton(
-                      text: 'Add Question',
-                      icon: Icons.add,
-                      onPressed: _addQuestion,
-                      color: Colors.purple.shade700,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildCompactButton(
-                      text: 'Submit Test',
-                      icon: Icons.check,
-                      onPressed: _submitTest,
-                      color: Colors.green.shade700,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Questions List with Constrained Height
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height *
-                      0.3, // Reduced from 0.4
-                ),
-                child: _buildQuestionsList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    required IconData icon,
-    required Color color,
-    int maxLines = 1,
-  }) {
-    return TextField(
-      controller: controller,
-      style: const TextStyle(
-          color: Colors.white, fontSize: 14), // Reduced font size
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-        prefixIcon: Icon(icon, color: color, size: 20),
-        isDense: true, // More compact
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        // Rest of the decoration remains the same
-      ),
-    );
-  }
-
-  Widget _buildCompactButton({
-    required String text,
-    required IconData icon,
-    required VoidCallback onPressed,
-    required Color color,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(
-        icon,
-        size: 16,
-        color: Colors.white, // Ensure icon is white for visibility
-      ),
-      label: Text(
-        text,
-        style: TextStyle(
-            fontSize: 12,
-            color: Colors.white, // Explicit white text
-            fontWeight: FontWeight.w600),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white, // Ensures text and icon color
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        elevation: 3, // Add some elevation for depth
-      ),
-    );
-  }
-
-  Widget _buildDateTimeSelector({
-    required String label,
-    required IconData icon,
-    required Color color,
-    DateTime? dateTime,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: Colors.grey.shade900,
-          border: Border.all(
-            color: color.withOpacity(0.5),
-            width: 1.5,
-          ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                dateTime == null
-                    ? label
-                    : DateFormat('dd MMM yyyy HH:mm').format(dateTime),
-                style: TextStyle(
-                  color: dateTime == null ? Colors.grey.shade500 : Colors.white,
-                ),
-              ),
-            ),
-            Icon(Icons.edit_calendar, color: color),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showSnackBar(String message, Color backgroundColor) {
@@ -643,118 +423,505 @@ class _CreateTestScreenState extends State<CreateTestScreen> {
     );
   }
 
-  Widget _buildQuestionContainer() {
+  @override
+  Widget build(BuildContext context) {
+    double h = MediaQuery.of(context).size.height;
+    double w = MediaQuery.of(context).size.width;
+    
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          titleSpacing: w * 0.01,
+        ),
+        cardColor: AppColors.cardColor,
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Create Test',
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontWeight: FontWeight.w600,
+              fontSize: h * 0.022,
+            ),
+          ),
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header section
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.all(h * 0.018),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.accentPurple.withOpacity(0.2),
+                        AppColors.accentBlue.withOpacity(0.2),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(w * 0.03),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentPurple.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.quiz_outlined,
+                          color: AppColors.accentPurple,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Test Configuration",
+                            style: TextStyle(
+                              color: AppColors.primaryText,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Create questions and set parameters",
+                            style: TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Test Info Section
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.accentBlue.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Test Information",
+                        style: TextStyle(
+                          color: AppColors.accentBlue,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Test Name
+                      _buildTextField(
+                        controller: _testNameController,
+                        labelText: 'Test Name',
+                        icon: Icons.text_fields,
+                        color: AppColors.accentBlue,
+                      ),
+                      SizedBox(height: 12),
+                      
+                      // Test Duration
+                      _buildTextField(
+                        controller: _testDurationController,
+                        labelText: 'Duration (minutes)',
+                        icon: Icons.timer,
+                        color: AppColors.accentGreen,
+                        keyboardType: TextInputType.number,
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Date Selectors
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateTimeSelector(
+                              label: 'Start',
+                              icon: Icons.calendar_today,
+                              color: AppColors.accentPurple,
+                              dateTime: _startDate,
+                              onTap: _selectStartDateTime,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _buildDateTimeSelector(
+                              label: 'End',
+                              icon: Icons.event_available,
+                              color: AppColors.accentYellow,
+                              dateTime: _endDate,
+                              onTap: _selectEndDateTime,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Add Question Section
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.accentPurple.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Add Question",
+                        style: TextStyle(
+                          color: AppColors.accentPurple,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Question text
+                      _buildTextField(
+                        controller: _questionController,
+                        labelText: 'Question Text',
+                        icon: Icons.help_outline,
+                        color: AppColors.accentPurple,
+                        maxLines: 2,
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Options
+                      ...List.generate(4, (index) => _buildOptionTile(index)),
+                      
+                      SizedBox(height: 16),
+                      
+                      // Add Question Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _addQuestion,
+                          icon: Icon(Icons.add),
+                          label: Text("Add Question"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accentPurple,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Action Buttons
+                Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionButton(
+                          text: "Import CSV",
+                          icon: Icons.upload_file,
+                          color: AppColors.accentBlue,
+                          onPressed: _importFromCSV,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: _buildActionButton(
+                          text: "Submit Test",
+                          icon: Icons.check_circle,
+                          color: AppColors.accentGreen,
+                          onPressed: _submitTest,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Questions List
+                if (_questions.isNotEmpty)
+                  Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.accentYellow.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Questions (${_questions.length})",
+                              style: TextStyle(
+                                color: AppColors.accentYellow,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              "Tap to expand",
+                              style: TextStyle(
+                                color: AppColors.secondaryText,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12),
+                        
+                        // Questions list with fixed height
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: 300,
+                          ),
+                          child: ListView.builder(
+                            itemCount: _questions.length,
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            itemBuilder: (context, index) {
+                              return _buildQuestionTile(index);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  // Empty state
+                  Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.secondaryText.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.quiz_outlined,
+                            color: AppColors.secondaryText,
+                            size: 48,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            "No questions added yet",
+                            style: TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Add questions manually or import from CSV",
+                            style: TextStyle(
+                              color: AppColors.tertiaryText,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData icon,
+    required Color color,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Colors.grey.shade900,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.cyan.shade200.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
       ),
-      child: Column(
-        children: [
-          _buildTextField(
-            controller: _questionController,
-            labelText: 'Enter Question',
-            icon: Icons.question_answer,
-            color: Colors.cyan.shade200,
-          ),
-          ...List.generate(4, (index) => _buildOptionTile(index)),
-        ],
+      child: TextField(
+        controller: controller,
+        style: TextStyle(color: AppColors.primaryText),
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: TextStyle(color: AppColors.secondaryText),
+          prefixIcon: Icon(icon, color: color),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
       ),
     );
   }
 
   Widget _buildOptionTile(int index) {
-    return ListTile(
-      title: _buildTextField(
-        controller: _optionControllers[index],
-        labelText: 'Option ${index + 1}',
-        icon: Icons.check_circle_outline,
-        color: Colors.pink.shade200,
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _correctOption == index 
+              ? AppColors.accentGreen.withOpacity(0.5)
+              : Colors.transparent,
+          width: 1,
+        ),
       ),
-      leading: Radio<int>(
-        value: index,
-        groupValue: _correctOption,
-        onChanged: (int? value) {
-          setState(() {
-            _correctOption = value;
-          });
-        },
-        activeColor: Colors.pink.shade200,
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildGradientButton(
-          text: 'Import CSV',
-          startColor: Colors.blue.shade900.withOpacity(0.5),
-          endColor: Colors.cyan.shade900.withOpacity(0.5),
-          onPressed: _importFromCSV,
-        ),
-        _buildGradientButton(
-          text: 'Add Question',
-          startColor: Colors.purple.shade900.withOpacity(0.5),
-          endColor: Colors.indigo.shade900.withOpacity(0.5),
-          onPressed: _addQuestion,
-        ),
-        _buildGradientButton(
-          text: 'Submit Test',
-          startColor: Colors.green.shade900.withOpacity(0.5),
-          endColor: Colors.teal.shade900.withOpacity(0.5),
-          onPressed: _submitTest,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuestionsList() {
-    return _questions.isEmpty
-        ? _buildEmptyState()
-        : ListView.builder(
-            itemCount: _questions.length,
-            itemBuilder: (context, index) {
-              return _buildQuestionTile(index);
-            },
-          );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Icon(
-            Icons.add_circle_outline,
-            color: Colors.purple.shade200,
-            size: 80,
+          Radio<int>(
+            value: index,
+            groupValue: _correctOption,
+            onChanged: (int? value) {
+              setState(() {
+                _correctOption = value;
+              });
+            },
+            activeColor: AppColors.accentGreen,
           ),
-          const SizedBox(height: 20),
-          Text(
-            'No questions added',
-            style: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Add your first question to get started',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 14,
+          SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _optionControllers[index],
+              style: TextStyle(color: AppColors.primaryText),
+              decoration: InputDecoration(
+                hintText: 'Option ${index + 1}',
+                hintStyle: TextStyle(color: AppColors.tertiaryText),
+                border: InputBorder.none,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDateTimeSelector({
+    required String label,
+    required IconData icon,
+    required Color color,
+    DateTime? dateTime,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: AppColors.secondaryText,
+                      fontSize: 12,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    dateTime == null
+                        ? "Select"
+                        : DateFormat('dd MMM, HH:mm').format(dateTime),
+                    style: TextStyle(
+                      color: dateTime == null
+                          ? AppColors.tertiaryText
+                          : AppColors.primaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String text,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(text),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color.withOpacity(0.2),
+        foregroundColor: color,
+        padding: EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: color.withOpacity(0.5)),
+        ),
       ),
     );
   }

@@ -1,9 +1,8 @@
-import 'package:classcare/screens/teacher/classDetailsPage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'assignment_detail_screen.dart';
-
+import 'Colors.dart';
 class AssignmentList extends StatelessWidget {
   final String classId;
   final bool isCurrent;
@@ -53,10 +52,11 @@ class AssignmentList extends StatelessWidget {
                   assignment.data() as Map<String, dynamic>;
 
               return Card(
+                color: const Color.fromARGB(255, 22, 21, 21),
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListTile(
                   
-                  title: Text(data['title'] ,style: TextStyle(color: Colors.blue,)),
+                  title: Text(data['title'] ,style: TextStyle(color: AppColors.accentBlue,)),
                   subtitle: Text(
                     "Due Date: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(data['dueDate']))}",
                   ),

@@ -186,13 +186,18 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   }
 
   void _showAnalysisDetailsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: _theme['surface'],
-        title: Text('Assignment Analysis',
-            style: TextStyle(color: _theme['textPrimary'])),
-        content: SingleChildScrollView(
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: _theme['surface'],
+      title: Text('Assignment Analysis',
+          style: TextStyle(color: _theme['textPrimary'])),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7, // 70% of screen height
+          minHeight: MediaQuery.of(context).size.height * 0.5, // 50% of screen height
+        ),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -200,14 +205,15 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
               Text('Marks:',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       color: _theme['textPrimary'])),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(16), // Increased padding
                 decoration: BoxDecoration(
                   color: _theme['primary']!.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12), // Increased radius
                   border:
                       Border.all(color: _theme['primary']!.withOpacity(0.5)),
                 ),
@@ -215,37 +221,45 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                     style:
                         TextStyle(fontSize: 16, color: _theme['textPrimary'])),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 24), // Increased spacing
               Text('Feedback:',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       color: _theme['textPrimary'])),
-              SizedBox(height: 8),
+              SizedBox(height: 12), // Increased spacing
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(16), // Increased padding
                 decoration: BoxDecoration(
                   color: _theme['primary']!.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12), // Increased radius
                   border:
                       Border.all(color: _theme['primary']!.withOpacity(0.5)),
+                ),
+                // Minimum height for the feedback container
+                constraints: BoxConstraints(
+                  minHeight: 200, // Minimum height in pixels
                 ),
                 child: Text(_feedback ?? 'No feedback provided',
                     style:
                         TextStyle(fontSize: 14, color: _theme['textPrimary'])),
               ),
+              // Extra padding at the bottom
+              SizedBox(height: 16),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Close', style: TextStyle(color: _theme['accent'])),
-          ),
-        ],
       ),
-    );
-  }
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Close', style: TextStyle(color: _theme['accent'])),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildAnalysisResultSection(double w, double h) {
     if (!_hasAnalysisResult) return Container();

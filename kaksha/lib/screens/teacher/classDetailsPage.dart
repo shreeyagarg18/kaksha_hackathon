@@ -552,3 +552,4 @@ class _ClassDetailPageState extends State<ClassDetailPage>
     );
   }
 }
+ 

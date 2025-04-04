@@ -1,8 +1,7 @@
-import 'package:classcare/screens/student/StudentClassDetails.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:classcare/screens/student/assignment_card.dart';
-
+import 'package:classcare/widgets/Colors.dart';
 class AssignmentList extends StatefulWidget {
   final String classId;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:classcare/widgets/Colors.dart';
 class StudentsList extends StatelessWidget {
   final String classId;
 
@@ -340,22 +340,3 @@ class StudentsList extends StatelessWidget {
 
 }
 
-// AppColors class from your original file
-class AppColors {
-  // Base colors
-  static const Color background = Color(0xFF121212);
-  static const Color surfaceColor = Color(0xFF1E1E1E);
-  static const Color cardColor = Color(0xFF252525);
-  
-  // Subtle accent colors
-  static const Color accentBlue = Color.fromARGB(255, 124, 197, 231);
-  static const Color accentGreen = Color(0xFF8FBCBB);
-  static const Color accentPurple = Color(0xFFB48EAD);
-  static const Color accentYellow = Color(0xFFEBCB8B);
-  static const Color accentRed = Color(0xFFBF616A);
-  
-  // Text colors
-  static const Color primaryText = Colors.white;
-  static const Color secondaryText = Color(0xFFAAAAAA);
-  static const Color tertiaryText = Color(0xFF757575);
-}
