@@ -47,6 +47,13 @@ Watch the product demo on:
 - **Attendance Analytics**:
   - Detailed historical attendance reports with date filtering
 
+### ❓ Quizzes
+- **AI-Powered Question Generation**: Create quizzes manually or use Gemini Models for auto-generated questions.
+- **Smart Scheduling**: Set start/end dates, duration limits, and auto-lock quizzes after deadlines.
+- **Cheating Prevention**: Detect tab switches, external cameras, and unauthorized devices using AI.
+- **Instant Grading & Feedback**: Auto-score objective questions; AI evaluates short answers with detailed feedback.
+- **Quiz Analytics**: Track student performance, accuracy rates, and identify knowledge gaps.
+
 ### 🤖 AI-Powered Tools
 - **PDF Generator**:
   - Create comprehensive study materials on any topic with a simple prompt
