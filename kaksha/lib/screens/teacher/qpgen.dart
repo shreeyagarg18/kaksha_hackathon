@@ -11,6 +11,8 @@ import 'package:open_file/open_file.dart';
 import 'package:classcare/widgets/Colors.dart';
 
 class GenerateQuestionPaperScreen extends StatefulWidget {
+  const GenerateQuestionPaperScreen({super.key});
+
   @override
   _GenerateQuestionPaperScreenState createState() =>
       _GenerateQuestionPaperScreenState();
@@ -35,7 +37,7 @@ class _GenerateQuestionPaperScreenState
   Future<String> fetchQuestionsFromGemini(int numQuestions, String topic,
       String difficulty, String marks, String description) async {
     var apiKey =
-        dotenv.env['API_KEY_3']??''; // Replace with your Gemini API Key
+        dotenv.env['API_KEY_3'] ?? ''; // Replace with your Gemini API Key
     var url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
 
@@ -175,7 +177,7 @@ class _GenerateQuestionPaperScreenState
       );
 
       // Save PDF in Downloads folder
-      Directory? downloadsDir = await getApplicationDocumentsDirectory(); 
+      Directory? downloadsDir = await getApplicationDocumentsDirectory();
       if (!downloadsDir.existsSync()) {
         downloadsDir = await getExternalStorageDirectory();
       }
@@ -397,7 +399,7 @@ class _GenerateQuestionPaperScreenState
                 SizedBox(height: 20),
 
                 // Generate Button
-                Container(
+                SizedBox(
                   width: double.infinity,
                   child: _isLoading
                       ? Center(

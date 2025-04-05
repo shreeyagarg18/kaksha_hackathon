@@ -186,80 +186,225 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
   }
 
   void _showAnalysisDetailsDialog() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: _theme['surface'],
-      title: Text('Assignment Analysis',
-          style: TextStyle(color: _theme['textPrimary'])),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7, // 70% of screen height
-          minHeight: MediaQuery.of(context).size.height * 0.5, // 50% of screen height
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Marks:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _theme['textPrimary'])),
-              SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16), // Increased padding
-                decoration: BoxDecoration(
-                  color: _theme['primary']!.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12), // Increased radius
-                  border:
-                      Border.all(color: _theme['primary']!.withOpacity(0.5)),
-                ),
-                child: Text(_marks ?? 'Not available',
-                    style:
-                        TextStyle(fontSize: 16, color: _theme['textPrimary'])),
-              ),
-              SizedBox(height: 24), // Increased spacing
-              Text('Feedback:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: _theme['textPrimary'])),
-              SizedBox(height: 12), // Increased spacing
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16), // Increased padding
-                decoration: BoxDecoration(
-                  color: _theme['primary']!.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12), // Increased radius
-                  border:
-                      Border.all(color: _theme['primary']!.withOpacity(0.5)),
-                ),
-                // Minimum height for the feedback container
-                constraints: BoxConstraints(
-                  minHeight: 200, // Minimum height in pixels
-                ),
-                child: Text(_feedback ?? 'No feedback provided',
-                    style:
-                        TextStyle(fontSize: 14, color: _theme['textPrimary'])),
-              ),
-              // Extra padding at the bottom
-              SizedBox(height: 16),
-            ],
+    final marksController = TextEditingController(text: _marks);
+    final feedbackController = TextEditingController(text: _feedback);
+    bool isExpandedView = false;
+    double fontSize = 15; // Default font size
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: _theme['card'],
+          title: Text(
+            "Assignment Analysis",
+            style: TextStyle(
+                color: _theme['textPrimary'], fontWeight: FontWeight.w600),
           ),
+          content: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: isExpandedView
+                ? MediaQuery.of(context).size.width * 0.85
+                : null,
+            height: isExpandedView
+                ? MediaQuery.of(context).size.height * 0.7
+                : null,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _theme['surface'],
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.accentBlue.withOpacity(0.5),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Marks:",
+                          style: TextStyle(
+                              color: AppColors.accentBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: marksController,
+                          style: TextStyle(
+                              color: _theme['textPrimary'], fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Enter marks',
+                            hintStyle:
+                                TextStyle(color: _theme['textSecondary']),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: AppColors.accentBlue.withOpacity(0.5)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide:
+                                  const BorderSide(color: AppColors.accentBlue),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: _theme['background'],
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Feedback:",
+                        style: TextStyle(
+                            color: AppColors.accentBlue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                      TextButton.icon(
+                        icon: Icon(
+                          isExpandedView
+                              ? Icons.fullscreen_exit
+                              : Icons.fullscreen,
+                          size: 18,
+                          color: AppColors.accentBlue,
+                        ),
+                        label: Text(
+                          isExpandedView ? "Compact View" : "Expand",
+                          style: const TextStyle(
+                            color: AppColors.accentBlue,
+                            fontSize: 14,
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isExpandedView = !isExpandedView;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _theme['background'],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.accentBlue.withOpacity(0.5),
+                      ),
+                    ),
+                    height: isExpandedView ? 350 : 150,
+                    child: TextField(
+                      controller: feedbackController,
+                      style: TextStyle(
+                          color: _theme['textSecondary'], fontSize: fontSize),
+                      maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top,
+                      decoration: InputDecoration(
+                        hintText: 'Enter feedback',
+                        hintStyle: TextStyle(color: _theme['textTertiary']),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  ),
+                  if (isExpandedView)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.text_increase, size: 16),
+                              label: const Text("Increase Font"),
+                              onPressed: () {
+                                setState(() {
+                                  fontSize += 2;
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentBlue,
+                                side: BorderSide(
+                                    color:
+                                        AppColors.accentBlue.withOpacity(0.5)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.text_decrease, size: 16),
+                              label: const Text("Decrease Font"),
+                              onPressed: () {
+                                setState(() {
+                                  fontSize -= 2;
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentBlue,
+                                side: BorderSide(
+                                    color:
+                                        AppColors.accentBlue.withOpacity(0.5)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                  foregroundColor: _theme['textSecondary']),
+              child: const Text("Close"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Here you would handle any saving logic if needed
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accentGreen,
+                foregroundColor: _theme['textPrimary'],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("OK"),
+            ),
+          ],
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close', style: TextStyle(color: _theme['accent'])),
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildAnalysisResultSection(double w, double h) {
     if (!_hasAnalysisResult) return Container();
@@ -280,7 +425,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
             Row(
               children: [
                 Icon(Icons.analytics_outlined,
-                    color: AppColors.accentGreen, size: w * 0.06),
+                    color: AppColors.accentBlue, size: w * 0.06),
                 SizedBox(width: w * 0.02),
                 Text("Assignment Analysis",
                     style: TextStyle(
@@ -309,21 +454,21 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: _showAnalysisDetailsDialog,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.info_outline, color:AppColors.accentGreen),
-                    SizedBox(width: 8),
-                    Text("View Full Analysis",
-                        style: TextStyle(color: AppColors.accentGreen)),
-                  ],
-                ),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color:AppColors.accentGreen!),
+                    side: BorderSide(color: AppColors.accentBlue),
                   ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.info_outline, color: AppColors.accentBlue),
+                    SizedBox(width: 8),
+                    Text("View Full Analysis",
+                        style: TextStyle(color: AppColors.accentBlue)),
+                  ],
                 ),
               ),
             ),
@@ -351,7 +496,6 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
           primary: _theme['primary']!,
           secondary: _theme['accent']!,
           surface: _theme['surface']!,
-          background: _theme['background']!,
           error: _theme['error']!,
         ),
         cardColor: _theme['card'],
@@ -539,7 +683,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                     ? Icons.check_circle_outline
                                     : Icons.pending_outlined,
                                 color: _isSubmitted
-                                    ? AppColors.accentGreen
+                                    ? AppColors.accentBlue
                                     : AppColors.accentYellow,
                                 size: w * 0.06,
                               ),
@@ -552,7 +696,7 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                   fontSize: w * 0.045,
                                   fontWeight: FontWeight.bold,
                                   color: _isSubmitted
-                                      ? AppColors.accentGreen
+                                      ? AppColors.accentBlue
                                       : AppColors.accentYellow,
                                 ),
                               ),
@@ -661,7 +805,8 @@ class _AssignmentDetailPageState extends State<AssignmentDetailPage> {
                                           SizedBox(width: w * 0.02),
                                           Text("Submit Assignment",
                                               style: TextStyle(
-                                                  color: const Color.fromARGB(255, 255, 255, 255),
+                                                  color: const Color.fromARGB(
+                                                      255, 255, 255, 255),
                                                   fontSize: w * 0.05,
                                                   fontWeight: FontWeight.bold,
                                                   letterSpacing: 0.5)),

@@ -11,6 +11,8 @@ import 'package:open_file/open_file.dart';
 import 'package:classcare/widgets/Colors.dart';
 
 class GeneratePdfScreen extends StatefulWidget {
+  const GeneratePdfScreen({super.key});
+
   @override
   _GeneratePdfScreenState createState() => _GeneratePdfScreenState();
 }
@@ -27,8 +29,8 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
 
   /// Fetch Content from Gemini API
   Future<String> fetchContentFromGemini(String topic) async {
-    var apiKey = dotenv.env['API_KEY_4'] ?? 'default_or_empty_string';// Replace with your Gemini API Key
- 
+    var apiKey = dotenv.env['API_KEY_4'] ??
+        'default_or_empty_string'; // Replace with your Gemini API Key
 
     var url =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey';
@@ -137,7 +139,7 @@ class _GeneratePdfScreenState extends State<GeneratePdfScreen> {
       );
 
       // Save PDF in Downloads folder
-      Directory? downloadsDir = await getApplicationDocumentsDirectory(); 
+      Directory? downloadsDir = await getApplicationDocumentsDirectory();
       if (!downloadsDir.existsSync()) {
         downloadsDir = await getExternalStorageDirectory();
       }

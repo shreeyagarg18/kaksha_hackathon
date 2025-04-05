@@ -3,8 +3,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'analyze.dart';
-import 'Colors.dart';
-// Define app colors to match the StudentClassDetails styl
+
+// Define app colors to match the StudentClassDetails style
+class AppColors {
+  // Base colors
+  static const Color background = Color(0xFF121212);
+  static const Color surfaceColor = Color(0xFF1E1E1E);
+  static const Color cardColor = Color(0xFF252525);
+
+  // Subtle accent colors
+  static const Color accentBlue = Color(0xFF81A1C1);
+  static const Color accentGreen = Color.fromARGB(255, 125, 225, 130);
+  static const Color accentPurple = Color(0xFFB48EAD);
+  static const Color accentYellow = Color(0xFFEBCB8B);
+  static const Color accentRed = Color(0xFFBF616A);
+
+  // Text colors
+  static const Color primaryText = Colors.white;
+  static const Color secondaryText = Color(0xFFAAAAAA);
+  static const Color tertiaryText = Color(0xFF757575);
+}
 
 class AssignmentDetailScreen extends StatefulWidget {
   final String classId,
@@ -59,10 +77,11 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
 
       if (mounted) _showResultDialog(formattedResult, submissionId);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         _showResultDialog(
             {'marks': 'Error', 'feedback': 'Error analyzing submission: $e'},
             submissionId);
+      }
     } finally {
       if (mounted) setState(() => _isAnalyzingMap.remove(submissionId));
     }
@@ -156,213 +175,259 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
   }
 
   void _showResultDialog(Map<String, String> result, String submissionId) {
-  final marksController = TextEditingController(text: result['marks']);
-  final feedbackController = TextEditingController(text: result['feedback']);
-  bool isUpdating = false;
+    final marksController = TextEditingController(text: result['marks']);
+    final feedbackController = TextEditingController(text: result['feedback']);
+    bool isUpdating = false;
+    bool isExpandedView = false;
+    double fontSize = 15; // Default font size
 
-  // Use showGeneralDialog instead of showDialog for better keyboard handling
-  showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: "Analysis Dialog",
-    transitionDuration: const Duration(milliseconds: 200),
-    pageBuilder: (context, animation1, animation2) => StatefulBuilder(
-      builder: (context, setState) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: AppColors.cardColor,
+          title: const Text(
+            "Analysis Result",
+            style: TextStyle(
+                color: AppColors.primaryText, fontWeight: FontWeight.w600),
           ),
-          child: Center(
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.85,
-                  maxWidth: MediaQuery.of(context).size.width * 0.9,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Dialog header
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        "Analysis Result",
-                        style: TextStyle(
-                          color: AppColors.primaryText,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                        ),
+          content: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: isExpandedView
+                ? MediaQuery.of(context).size.width * 0.85
+                : null,
+            height: isExpandedView
+                ? MediaQuery.of(context).size.height * 0.7
+                : null,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.accentBlue.withOpacity(0.5),
+                        width: 1,
                       ),
                     ),
-                    // Dialog content (scrollable)
-                    Flexible(
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: AppColors.accentBlue.withOpacity(0.5),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text("Marks:",
-                                        style: TextStyle(
-                                            color: AppColors.accentBlue,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16)),
-                                    const SizedBox(height: 10),
-                                    TextField(
-                                      controller: marksController,
-                                      style: const TextStyle(
-                                          color: AppColors.primaryText, fontSize: 15),
-                                      decoration: InputDecoration(
-                                        hintText: 'Enter marks',
-                                        hintStyle:
-                                            TextStyle(color: AppColors.secondaryText),
-                                        border: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                              color: AppColors.accentBlue.withOpacity(0.5)),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide:
-                                              const BorderSide(color: AppColors.accentBlue),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        filled: true,
-                                        fillColor: AppColors.background,
-                                        contentPadding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 12),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              const Text("Feedback:",
-                                  style: TextStyle(
-                                      color: AppColors.accentBlue,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                              const SizedBox(height: 10),
-                              TextField(
-                                controller: feedbackController,
-                                style: const TextStyle(
-                                    color: AppColors.secondaryText, fontSize: 15),
-                                maxLines: 15,
-                                minLines: 10,
-                                decoration: InputDecoration(
-                                  hintText: 'Enter feedback',
-                                  hintStyle: TextStyle(color: AppColors.tertiaryText),
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: AppColors.accentBlue.withOpacity(0.5)),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: const BorderSide(color: AppColors.accentBlue),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: AppColors.background,
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
-                              ),
-                              SizedBox(height: 16),
-                            ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Marks:",
+                          style: TextStyle(
+                              color: AppColors.accentBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: marksController,
+                          style: const TextStyle(
+                              color: AppColors.primaryText, fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Enter marks',
+                            hintStyle:
+                                TextStyle(color: AppColors.secondaryText),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: AppColors.accentBlue.withOpacity(0.5)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide:
+                                  const BorderSide(color: AppColors.accentBlue),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: AppColors.background,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Feedback:",
+                        style: TextStyle(
+                            color: AppColors.accentBlue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                      ),
+                      TextButton.icon(
+                        icon: Icon(
+                          isExpandedView
+                              ? Icons.fullscreen_exit
+                              : Icons.fullscreen,
+                          size: 18,
+                          color: AppColors.accentBlue,
+                        ),
+                        label: Text(
+                          isExpandedView ? "Compact View" : "Expand",
+                          style: const TextStyle(
+                            color: AppColors.accentBlue,
+                            fontSize: 14,
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isExpandedView = !isExpandedView;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.accentBlue.withOpacity(0.5),
                       ),
                     ),
-                    // Dialog actions
+                    height: isExpandedView ? 350 : 150,
+                    child: TextField(
+                      controller: feedbackController,
+                      style: TextStyle(
+                          color: AppColors.secondaryText, fontSize: fontSize),
+                      maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top,
+                      decoration: InputDecoration(
+                        hintText: 'Enter feedback',
+                        hintStyle: TextStyle(color: AppColors.tertiaryText),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  ),
+                  if (isExpandedView)
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.only(top: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            style: TextButton.styleFrom(
-                                foregroundColor: AppColors.secondaryText),
-                            child: const Text("Cancel"),
-                          ),
-                          const SizedBox(width: 8),
-                          if (isUpdating)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2)),
-                            )
-                          else
-                            ElevatedButton(
-                              onPressed: () async {
-                                setState(() => isUpdating = true);
-                                try {
-                                  await FirebaseFirestore.instance
-                                      .collection('classes')
-                                      .doc(widget.classId)
-                                      .collection('assignments')
-                                      .doc(widget.assignmentId)
-                                      .collection('submissions')
-                                      .doc(submissionId)
-                                      .update({
-                                    'analysisResult': {
-                                      'marks': marksController.text,
-                                      'feedback': feedbackController.text
-                                    }
-                                  });
-
-                                  if (context.mounted) {
-                                    Navigator.of(context).pop();
-                                    _showSnackBar('Analysis updated successfully',
-                                        color: AppColors.accentGreen);
-                                  }
-                                } catch (e) {
-                                  setState(() => isUpdating = false);
-                                  _showSnackBar('Error updating analysis: $e',
-                                      color: AppColors.accentRed);
-                                }
+                          Flexible(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.text_increase, size: 16),
+                              label: const Text("Increase Font"),
+                              onPressed: () {
+                                setState(() {
+                                  fontSize += 2;
+                                });
                               },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.accentBlue,
-                                foregroundColor: AppColors.primaryText,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentBlue,
+                                side: BorderSide(
+                                    color:
+                                        AppColors.accentBlue.withOpacity(0.5)),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: const Text("Update"),
                             ),
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.text_decrease, size: 16),
+                              label: const Text("Decrease Font"),
+                              onPressed: () {
+                                setState(() {
+                                  fontSize -= 2;
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.accentBlue,
+                                side: BorderSide(
+                                    color:
+                                        AppColors.accentBlue.withOpacity(0.5)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                  foregroundColor: AppColors.secondaryText),
+              child: const Text("Cancel"),
+            ),
+            if (isUpdating)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else
+              ElevatedButton(
+                onPressed: () async {
+                  setState(() => isUpdating = true);
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('classes')
+                        .doc(widget.classId)
+                        .collection('assignments')
+                        .doc(widget.assignmentId)
+                        .collection('submissions')
+                        .doc(submissionId)
+                        .update({
+                      'analysisResult': {
+                        'marks': marksController.text,
+                        'feedback': feedbackController.text
+                      }
+                    });
+
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      _showSnackBar('Analysis updated successfully',
+                          color: AppColors.accentGreen);
+                    }
+                  } catch (e) {
+                    setState(() => isUpdating = false);
+                    _showSnackBar('Error updating analysis: $e',
+                        color: AppColors.accentRed);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accentBlue,
+                  foregroundColor: AppColors.primaryText,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text("Update"),
+              ),
+          ],
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Future<void> _downloadFile(String url) async {
     try {
@@ -696,8 +761,8 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
-                        child:
-                            CircularProgressIndicator(color: AppColors.accentBlue));
+                        child: CircularProgressIndicator(
+                            color: AppColors.accentBlue));
                   }
 
                   final submissions = snapshot.data!.docs;
@@ -713,7 +778,8 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                           const SizedBox(height: 16),
                           const Text("No submissions yet",
                               style: TextStyle(
-                                  fontSize: 18, color: AppColors.secondaryText)),
+                                  fontSize: 18,
+                                  color: AppColors.secondaryText)),
                         ],
                       ),
                     );
@@ -765,7 +831,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                               icon: const Icon(Icons.auto_awesome, size: 18),
                               label: _isAnalyzingAll
                                   ? Text(
-                                      'Analyzing ${_currentAnalyzing}/${_totalToAnalyze}')
+                                      'Analyzing $_currentAnalyzing/$_totalToAnalyze')
                                   : const Text('Analyze All'),
                               onPressed: _isAnalyzingAll
                                   ? null
@@ -798,8 +864,7 @@ class _AssignmentDetailScreenState extends State<AssignmentDetailScreen> {
                                       style: TextStyle(
                                           fontSize: 12,
                                           color: AppColors.secondaryText)),
-                                  Text(
-                                      '${_currentAnalyzing}/${_totalToAnalyze}',
+                                  Text('$_currentAnalyzing/$_totalToAnalyze',
                                       style: TextStyle(
                                           fontSize: 12,
                                           color: AppColors.accentBlue,
