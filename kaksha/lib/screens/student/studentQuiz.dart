@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-
+import 'package:classcare/widgets/Colors.dart';
 class Studentquiz extends StatefulWidget {
   final String classId;
 
@@ -65,10 +65,20 @@ class _StudentquizState extends State<Studentquiz> {
     setState(() {
       _isLoading = false;
     });
+    _showSnackBar('Error: $error', AppColors.accentRed);
+  }
+
+  void _showSnackBar(String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Error: $error', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.red.shade600,
+        content: Text(
+          message,
+          style: TextStyle(color: AppColors.primaryText),
+        ),
+        backgroundColor: backgroundColor.withOpacity(0.8),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(10),
       ),
     );
   }
@@ -92,139 +102,253 @@ class _StudentquizState extends State<Studentquiz> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white), // Makes back arrow white
-        title: Text(
-          'Available Quizzes',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
+    double h = MediaQuery.of(context).size.height;
+    double w = MediaQuery.of(context).size.width;
+
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          titleSpacing: w * 0.01,
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.white),
-            onPressed: _fetchTests,
-          ),
-        ],
+        cardColor: AppColors.cardColor,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.black,
-              Colors.blue.shade900.withOpacity(0.7),
-              Colors.black,
-            ],
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Available Quizzes',
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontWeight: FontWeight.w600,
+              fontSize: h * 0.02,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.refresh, color: AppColors.accentBlue),
+              onPressed: _fetchTests,
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header section similar to GenerateMCQScreen
+                Container(
+                  margin: EdgeInsets.only(bottom: 24),
+                  padding: EdgeInsets.all(h * 0.018),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.accentBlue.withOpacity(0.2),
+                        AppColors.accentPurple.withOpacity(0.2),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(w * 0.03),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentBlue.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.quiz_outlined,
+                          color: AppColors.accentBlue,
+                          size: 22,
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Class Quizzes",
+                            style: TextStyle(
+                              color: AppColors.primaryText,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Take available quizzes for your class",
+                            style: TextStyle(
+                              color: AppColors.secondaryText,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content section
+                _isLoading
+                    ? _buildLoadingIndicator()
+                    : _tests.isEmpty
+                        ? _buildEmptyState()
+                        : _buildTestList(h, w),
+              ],
+            ),
           ),
         ),
-        child: _isLoading
-            ? _buildLoadingIndicator()
-            : _tests.isEmpty
-                ? _buildEmptyState()
-                : _buildTestList(),
       ),
     );
   }
 
   Widget _buildLoadingIndicator() {
     return Center(
-      child: SpinKitWave(
-        color: Colors.blue.shade200,
-        size: 50.0,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 50),
+        child: SpinKitWave(
+          color: AppColors.accentBlue,
+          size: 40.0,
+        ),
       ),
     );
   }
 
-  Widget _buildTestList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      itemCount: _tests.length,
-      itemBuilder: (context, index) {
-        return FadeInUp(
-          duration: const Duration(milliseconds: 300),
-          child: _buildTestCard(index),
-        );
-      },
+  Widget _buildTestList(double h, double w) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 16),
+          child: Text(
+            "Quiz List",
+            style: TextStyle(
+              color: AppColors.primaryText,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        ListView.builder(
+          padding: EdgeInsets.zero,
+          physics: NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: _tests.length,
+          itemBuilder: (context, index) {
+            return FadeInUp(
+              duration: const Duration(milliseconds: 300),
+              delay: Duration(milliseconds: index * 50),
+              child: _buildTestCard(index, h, w),
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildTestCard(int index) {
+  Widget _buildTestCard(int index, double h, double w) {
     final test = _tests[index];
     final startDateTime = test['startDateTime'];
     final endDateTime = test['endDateTime'];
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.blue.shade900.withOpacity(0.5),
-            Colors.blue.shade800.withOpacity(0.5),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(w * 0.03),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.shade900.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => _showTestDetailsSheet(index),
+          borderRadius: BorderRadius.circular(w * 0.03),
+          onTap: () => _showTestDetailsSheet(index, h, w),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  test['name'] ?? 'Unnamed Test',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentPurple.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.assignment_outlined,
+                        color: AppColors.accentPurple,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        test['name'] ?? 'Unnamed Test',
+                        style: TextStyle(
+                          color: AppColors.primaryText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${test['questions'].length} Q',
+                        style: TextStyle(
+                          color: AppColors.accentGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                _buildTestInfoRow(
+                const SizedBox(height: 16),
+                _buildInfoRow(
                   icon: Icons.event_outlined,
-                  text: startDateTime != null
+                  label: 'Starts:',
+                  value: startDateTime != null
                       ? DateFormat('MMM dd, yyyy - hh:mm a')
                           .format(startDateTime)
-                      : 'Start Time Unspecified',
+                      : 'Not specified',
+                  iconColor: AppColors.accentBlue,
                 ),
-                const SizedBox(height: 5),
-                _buildTestInfoRow(
-                  icon: Icons.calendar_today,
-                  text: endDateTime != null
+                const SizedBox(height: 8),
+                _buildInfoRow(
+                  icon: Icons.event_busy_outlined,
+                  label: 'Ends:',
+                  value: endDateTime != null
                       ? DateFormat('MMM dd, yyyy - hh:mm a').format(endDateTime)
-                      : 'End Time Unspecified',
+                      : 'Not specified',
+                  iconColor: AppColors.accentYellow,
                 ),
-                const SizedBox(height: 5),
-                _buildTestInfoRow(
-                  icon: Icons.timer,
-                  text: '${test['duration'] ?? 'Unknown'} minutes',
-                ),
-                const SizedBox(height: 5),
-                _buildTestInfoRow(
-                  icon: Icons.question_mark,
-                  text: '${test['questions'].length} Questions',
+                const SizedBox(height: 8),
+                _buildInfoRow(
+                  icon: Icons.timer_outlined,
+                  label: 'Duration:',
+                  value: '${test['duration'] ?? 'Unknown'} minutes',
+                  iconColor: AppColors.accentGreen,
                 ),
               ],
             ),
@@ -234,23 +358,41 @@ class _StudentquizState extends State<Studentquiz> {
     );
   }
 
-  Widget _buildTestInfoRow({required IconData icon, required String text}) {
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+  }) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: Colors.blue.shade200, size: 16),
+        Icon(icon, color: iconColor, size: 16),
         const SizedBox(width: 10),
-        Text(
-          text,
-          style: TextStyle(
-            color: Colors.grey.shade300,
-            fontSize: 14,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.secondaryText,
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                color: AppColors.primaryText,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  void _showTestDetailsSheet(int index) {
+  void _showTestDetailsSheet(int index, double h, double w) {
     final test = _tests[index];
     final startDateTime = test['startDateTime'];
     final endDateTime = test['endDateTime'];
@@ -260,15 +402,8 @@ class _StudentquizState extends State<Studentquiz> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.blue.shade900,
-              Colors.black,
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          color: AppColors.cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -276,15 +411,43 @@ class _StudentquizState extends State<Studentquiz> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                test['name'] ?? 'Unnamed Test',
-                style: TextStyle(
-                  color: Colors.blue.shade200,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryText.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentPurple.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.quiz_outlined,
+                      color: AppColors.accentPurple,
+                      size: 22,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    test['name'] ?? 'Unnamed Test',
+                    style: TextStyle(
+                      color: AppColors.primaryText,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               _buildDetailRow(
                 icon: Icons.event_outlined,
                 label: 'Start Time',
@@ -292,57 +455,92 @@ class _StudentquizState extends State<Studentquiz> {
                     ? DateFormat('MMMM dd, yyyy - hh:mm a')
                         .format(startDateTime)
                     : 'Not Specified',
+                iconColor: AppColors.accentBlue,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _buildDetailRow(
-                icon: Icons.calendar_today,
+                icon: Icons.event_busy_outlined,
                 label: 'End Time',
                 value: endDateTime != null
                     ? DateFormat('MMMM dd, yyyy - hh:mm a').format(endDateTime)
                     : 'Not Specified',
+                iconColor: AppColors.accentYellow,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _buildDetailRow(
-                icon: Icons.timer,
+                icon: Icons.timer_outlined,
                 label: 'Duration',
                 value: '${test['duration'] ?? 'Unknown'} minutes',
+                iconColor: AppColors.accentGreen,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _buildDetailRow(
-                icon: Icons.question_mark,
+                icon: Icons.question_mark_outlined,
                 label: 'Total Questions',
                 value: '${test['questions'].length}',
+                iconColor: AppColors.accentPurple,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
               Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade300,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: w * 0.8,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.accentBlue,
+                        AppColors.accentPurple,
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentBlue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    Navigator.pop(context); // Close the bottom sheet
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StudentTestScreen(
-                          testId: test['id'],
-                          classId: widget.classId,
-                          testDetails: {},
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: AppColors.primaryText,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // Close the bottom sheet
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StudentTestScreen(
+                            testId: test['id'],
+                            classId: widget.classId,
+                            testDetails: {},
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    child: Text(
-                      'Start Quiz',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.play_arrow_rounded,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Start Quiz',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -358,25 +556,33 @@ class _StudentquizState extends State<Studentquiz> {
     required IconData icon,
     required String label,
     required String value,
+    required Color iconColor,
   }) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue.shade200, size: 20),
-        const SizedBox(width: 10),
+        Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 18),
+        ),
+        const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
               style: TextStyle(
-                color: Colors.grey.shade400,
+                color: AppColors.secondaryText,
                 fontSize: 14,
               ),
             ),
             Text(
               value,
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.primaryText,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -388,30 +594,43 @@ class _StudentquizState extends State<Studentquiz> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return Container(
+      margin: EdgeInsets.only(top: 30),
+      padding: EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.assignment_late_outlined,
-            color: Colors.blue.shade200,
-            size: 100,
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.accentYellow.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.assignment_late_outlined,
+              color: AppColors.accentYellow,
+              size: 40,
+            ),
           ),
           const SizedBox(height: 20),
           Text(
             'No Quizzes Available',
             style: TextStyle(
-              color: Colors.blue.shade100,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+              color: AppColors.primaryText,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 10),
           Text(
             'Check back later or contact your instructor',
             style: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 16,
+              color: AppColors.secondaryText,
+              fontSize: 14,
             ),
             textAlign: TextAlign.center,
           ),
