@@ -1,3 +1,8 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+  // Determines how VS Code updates the Java classpath/configuration when build files change.
+  // Options:
+  // - "automatic": Automatically updates the classpath without prompting.
+  // - "interactive": Prompts you to confirm before updating (default behavior).
+  // - "disabled": Disables automatic updates; you'll need to trigger updates manually.
+  "java.configuration.updateBuildConfiguration": "interactive"
 }
