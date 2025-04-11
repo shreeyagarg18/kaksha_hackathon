@@ -13,7 +13,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   print("Loading .env...");
-    // Load .env file from assets folder
   await dotenv.load(fileName: "assets/.env");
 
   print("Loaded .env");
