@@ -34,6 +34,13 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
 - **Cheating Prevention**: Detect tab switches, external cameras, and unauthorized devices using AI.
 - **Instant Grading & Feedback**: Auto-score objective questions; AI evaluates short answers with detailed feedback.
 - **Quiz Analytics**: Track student performance, accuracy rates, and identify knowledge gaps.
+
+### 🤖 Phone Detection & Anti-Cheating Model
+-  Live object detection using **YOLOv11n** to monitor student activity during quizzes.
+-  Instant alerts when a mobile phone is detected on screen.
+-  **Web Dashboard Alert System**: Connected to a Flask-based web dashboard with Socket.IO
+Alerts are displayed live on the interface whenever a phone is detected
+Ideal for supervisors and teachers to monitor multiple students efficiently
 ### 🗣️ Class Chat
 - **Real-time Communication**: Collaborative environment for teachers and students to interact and clarify doubts
 
@@ -101,6 +108,8 @@ In today's fast-paced world, educators are burdened with numerous tasks ranging 
   - Google Vision API for OCR and analysis
   - Gemini API for assignment grading and insights
 - **Bluetooth Integration**: Flutter Blue package for attendance
+- **Ultralytics YOLOv11n:** Real-time object detection
+- **Torch:** Deep learning framework powering YOLO models
 
 ## 🚀 Getting Started
 
